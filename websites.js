@@ -17,6 +17,6 @@
    },
 */
 
-const PRIVE_WEBSITES = [
+const priv-_WEBSITES = [
 
 ];

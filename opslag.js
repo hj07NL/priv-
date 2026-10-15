@@ -7,7 +7,7 @@ const Opslag = {
   // iets lezen. Is er nog niks opgeslagen? Dan krijg je de standaardwaarde terug
   lees(sleutel, standaard) {
     try {
-      const tekst = localStorage.getItem('prive.' + sleutel);
+      const tekst = localStorage.getItem('priv-.' + sleutel);
       return tekst === null ? standaard : JSON.parse(tekst);
     } catch (e) {
       return standaard;
@@ -17,7 +17,7 @@ const Opslag = {
   // iets opslaan. JSON.stringify maakt van een lijst of object een stuk tekst
   schrijf(sleutel, waarde) {
     try {
-      localStorage.setItem('prive.' + sleutel, JSON.stringify(waarde));
+      localStorage.setItem('priv-.' + sleutel, JSON.stringify(waarde));
     } catch (e) { /* opslaan lukt niet, niks aan te doen */ }
   },
 
@@ -27,7 +27,7 @@ const Opslag = {
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k.startsWith('prive.')) uit[k] = localStorage.getItem(k);
+        if (k.startsWith('priv-.')) uit[k] = localStorage.getItem(k);
       }
     } catch (e) {}
     return uit;
@@ -37,7 +37,7 @@ const Opslag = {
   zetTerug(data) {
     try {
       Object.keys(data).forEach(k => {
-        if (k.startsWith('prive.')) localStorage.setItem(k, data[k]);
+        if (k.startsWith('priv-.')) localStorage.setItem(k, data[k]);
       });
     } catch (e) {}
   }
@@ -64,5 +64,5 @@ function bewaarInstelling(sleutel, waarde) {
   const nu = instellingen();
   nu[sleutel] = waarde;
   Opslag.schrijf('instellingen', nu);
-  Prive.zend('instellingen');   // laat de rest van de site weten dat er iets veranderd is
+  priv-.zend('instellingen');   // laat de rest van de site weten dat er iets veranderd is
 }
