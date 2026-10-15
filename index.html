@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <title>Privé</title>
+
+    <!-- viewport-fit=cover: op een iPhone loopt de site door tot achter de notch -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#05070f">
+    <meta name="description" content="Privé, mijn eigen besturingssysteem in de browser.">
+
+    <!-- PWA: hiermee kun je Privé als app op je beginscherm zetten -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Privé">
+
+    <!-- Inter lijkt op het Apple-lettertype. Op een Apple-apparaat wordt het echte Apple-lettertype gebruikt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap">
+
+    <link rel="stylesheet" href="css/stijl.css">
+</head>
+<body>
+
+    <!-- ACHTERGROND: het bewegende licht, of het echte weer als dat aan staat in Instellingen -->
+    <div id="achtergrond" aria-hidden="true">
+        <div class="aurora a1"></div>
+        <div class="aurora a2"></div>
+        <div class="aurora a3"></div>
+        <div class="wolken"></div>
+        <canvas id="weer-canvas"></canvas>
+    </div>
+
+    <!-- DYNAMIC ISLAND: het zwarte pilletje bovenin -->
+    <button id="eiland" type="button" aria-label="Dynamic Island">
+        <span class="eiland-links"></span>
+        <span class="eiland-midden"></span>
+        <span class="eiland-rechts"></span>
+    </button>
+
+    <!-- BUREAUBLAD: de widgets op het beginscherm, gevuld door js/apps/home.js -->
+    <main id="bureaublad"></main>
+
+    <!-- DOCK: de balk met app-iconen onderin, gevuld door js/kern.js -->
+    <nav id="dock" aria-label="Apps"></nav>
+
+    <!-- hier komt een geopende app in een venster -->
+    <div id="venster-laag"></div>
+
+    <!-- hier komt Siri -->
+    <div id="siri-laag"></div>
+
+    <!-- de scripts. De volgorde is belangrijk: eerst de basis, dan de apps, als laatste start.js -->
+    <script src="js/opslag.js"></script>
+    <script src="js/kern.js"></script>
+    <script src="js/weer.js"></script>
+    <script src="js/achtergrond.js"></script>
+    <script src="js/eiland.js"></script>
+    <script src="data/websites.js"></script>
+
+    <script src="js/apps/home.js"></script>
+    <script src="js/apps/websites.js"></script>
+    <script src="js/apps/agenda.js"></script>
+    <script src="js/apps/planner.js"></script>
+    <script src="js/apps/browser.js"></script>
+    <script src="js/apps/siri.js"></script>
+    <script src="js/apps/instellingen.js"></script>
+
+    <script src="js/start.js"></script>
+</body>
+</html>
