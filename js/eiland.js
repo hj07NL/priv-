@@ -1,10 +1,5 @@
-/* DYNAMIC ISLAND
-   Het zwarte pilletje bovenin, net als op een iPhone. Het kan:
-   - een melding laten zien      Eiland.melding('Taak toegevoegd', 'Wiskunde leren', '✓')
-   - een timer laten aftellen    Eiland.timer(300, 'Pasta')
-   - laten zien dat Siri luistert Eiland.siri(true)
-   - je waarschuwen 10 minuten voor een taak met een tijd
-   Het wisselen tussen de vormen gebeurt met CSS-classes, de animatie zit in de CSS. */
+/* DYNAMIC ISLAND (uitgebreid met Spotify-bediening)
+   Nederlandse commentaar: toont Spotify-track en een play/pause-knop als Spotify gekoppeld is. */
 
 const Eiland = {
   timerEinde: null,
@@ -15,10 +10,7 @@ const Eiland = {
 
   get knop() { return document.getElementById('eiland'); },
 
-  /* vorm kiezen: 'rust', 'breed', 'groot' of 'siri' */
-  vorm(naam) {
-    this.knop.className = naam;
-  },
+  vorm(naam) { this.knop.className = naam; },
 
   vul(links, midden, rechts) {
     this.knop.querySelector('.eiland-links').innerHTML = links || '';
@@ -26,7 +18,6 @@ const Eiland = {
     this.knop.querySelector('.eiland-rechts').innerHTML = rechts || '';
   },
 
-  /* terug naar de rustvorm, of naar de timer als die nog loopt */
   rust() {
     if (this.luistert) return this.siri(true);
     if (this.timerEinde) return this.toonTimer();
@@ -42,7 +33,6 @@ const Eiland = {
     this.meldingKlok = setTimeout(() => this.rust(), ms);
   },
 
-  /* ---------- timer ---------- */
   timer(seconden, label = 'Timer') {
     this.timerEinde = Date.now() + seconden * 1000;
     this.timerLabel = label;
@@ -51,11 +41,7 @@ const Eiland = {
     this.toonTimer();
   },
 
-  stopTimer() {
-    clearInterval(this.timerKlok);
-    this.timerEinde = null;
-    this.rust();
-  },
+  stopTimer() { clearInterval(this.timerKlok); this.timerEinde = null; this.rust(); },
 
   tik() {
     const over = this.timerEinde - Date.now();
@@ -76,7 +62,6 @@ const Eiland = {
     this.vul('<span class="eiland-timer-icoon">⏱</span>', '', `<span class="eiland-tijd">${min}:${sec}</span>`);
   },
 
-  /* ---------- Siri ---------- */
   siri(aan) {
     this.luistert = aan;
     if (!aan) return this.rust();
@@ -84,7 +69,6 @@ const Eiland = {
     this.vul('<span class="mini-bol"></span>', '', '<span class="golf"><i></i><i></i><i></i><i></i><i></i></span>');
   },
 
-  /* klik op het eiland: timer stoppen, of je volgende taak laten zien */
   klik() {
     if (this.timerEinde) {
       if (confirm('Timer "' + this.timerLabel + '" stoppen?')) this.stopTimer();
@@ -95,7 +79,6 @@ const Eiland = {
     else this.melding('Niks gepland', 'Je planner is leeg', '☑');
   },
 
-  /* elke 30 seconden kijken of er over 10 minuten een taak begint */
   bewaak() {
     setInterval(() => {
       const nu = Date.now();
@@ -112,32 +95,45 @@ const Eiland = {
   }
 };
 
-/* ---------- Spotify in Dynamic Island ---------- */
+/* ---------- Spotify in Dynamic Island met play/pause ---------- */
 Eiland.spotifyInterval = null;
 
 Eiland.toonSpotify = async function () {
   try {
-    if (!Opslag.lees('auth_spotify')) {
-      this.rust();
-      return;
-    }
-    const nu = await Auth.fetchSpotify('https://api.spotify.com/v1/me/player/currently-playing');
-    if (!nu || !nu.item) {
-      this.rust();
-      return;
-    }
-    const track = nu.item;
+    if (!Opslag.lees('auth_spotify')) { this.rust(); return; }
+    const now = await Auth.fetchSpotify('https://api.spotify.com/v1/me/player/currently-playing');
+    if (!now || !now.item) { this.rust(); return; }
+    const track = now.item;
     const titel = track.name;
     const artiest = track.artists.map(a => a.name).join(', ');
     const img = track.album.images && track.album.images[0] ? track.album.images[0].url : '';
+    const playing = !!now.is_playing;
     this.vorm('groot');
-    this.vul(
-      `<img src="${img}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover">`,
-      `<strong>${veilig(titel)}</strong><small>${veilig(artiest)}</small>`,
-      nu.is_playing ? '▶' : '▮▮'
-    );
+    const rechts = `<button class="eiland-spotify-knop" type="button" aria-label="${playing ? 'Pauzeer' : 'Speel'}">${playing ? '⏸' : '▶'}</button>`;
+    this.vul(`<img src="${img}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover">`,
+             `<strong>${veilig(titel)}</strong><small>${veilig(artiest)}</small>`,
+             rechts);
+    const knop = this.knop.querySelector('.eiland-spotify-knop');
+    if (knop) {
+      knop.onclick = async (e) => {
+        e.stopPropagation();
+        try {
+          const token = await Auth.krijgToken('spotify');
+          if (!token) throw new Error('Geen Spotify-token');
+          if (playing) {
+            await fetch('https://api.spotify.com/v1/me/player/pause', { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
+          } else {
+            await fetch('https://api.spotify.com/v1/me/player/play', { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
+          }
+          setTimeout(() => this.toonSpotify(), 500);
+        } catch (err) {
+          console.warn('Spotify play/pause mislukt', err);
+          Eiland.melding('Spotify', 'Besturing mislukt', '⛔', 2500);
+        }
+      };
+    }
   } catch (e) {
-    // geen token of netwerk fout => gewoon rustig teruggaan
+    // geen token of netwerk fout => rust
   }
 };
 
@@ -155,8 +151,7 @@ Eiland.stopSpotifyPoll = function () {
 };
 
 window.addEventListener('privé:auth', () => {
-  if (Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll();
-  else Eiland.stopSpotifyPoll();
+  if (Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll(); else Eiland.stopSpotifyPoll();
 });
 
 /* een kort geluidje maken met de Web Audio API (geen geluidsbestand nodig) */

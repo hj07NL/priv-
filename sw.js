@@ -1,8 +1,8 @@
 /* SERVICE WORKER: een script dat op de achtergrond draait en de bestanden van Privé bewaart.
    Daardoor opent Privé ook zonder internet, en voelt het als een echte app.
-   Pas je iets aan en zie je het niet? Verhoog dan het versienummer hieronder, bv. naar 'privé-v3'. */
+   Pas je iets aan en zie je het niet? Verhoog dan het versienummer hieronder, bv. naar 'privé-v4'. */
 
-const VERSIE = 'privé-v3';
+const VERSIE = 'privé-v4';
 const BESTANDEN = [
   './', 'index.html', 'manifest.webmanifest', 'css/stijl.css',
   'js/opslag.js', 'js/auth.js', 'js/kern.js', 'js/weer.js', 'js/achtergrond.js', 'js/eiland.js', 'js/start.js',
