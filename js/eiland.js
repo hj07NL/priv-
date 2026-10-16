@@ -1,5 +1,6 @@
-/* DYNAMIC ISLAND (uitgebreid met Spotify-bediening)
-   Nederlandse commentaar: toont Spotify-track en een play/pause-knop als Spotify gekoppeld is. */
+/* DYNAMIC ISLAND (met Spotify SDK-ondersteuning)
+   Nederlandse commentaar: toont Spotify-track en play/pause via Web Playback SDK als die beschikbaar is.
+   Fallback: als SDK niet werkt, gebruiken we de Web API (zoals eerder). */
 
 const Eiland = {
   timerEinde: null,
@@ -95,58 +96,86 @@ const Eiland = {
   }
 };
 
-/* ---------- Spotify in Dynamic Island met play/pause ---------- */
+/* ---------- Spotify weergave: gebruik eerst de SDK-manager, anders fallback naar Web API ---------- */
 Eiland.spotifyInterval = null;
+Eiland.spotifyListener = null;
 
 Eiland.toonSpotify = async function () {
   try {
+    // eerst de SDK-status proberen
+    if (window.SpotifyManager && SpotifyManager.getState) {
+      const s = SpotifyManager.getState();
+      if (s && s.track_window && s.track_window.current_track) {
+        const track = s.track_window.current_track;
+        const titel = track.name;
+        const artiest = track.artists.map(a => a.name).join(', ');
+        const img = track.album.images && track.album.images[0] ? track.album.images[0].url : '';
+        const playing = !s.paused;
+        this.vorm('groot');
+        const rechts = `<button class="eiland-spotify-knop" type="button" aria-label="${playing ? 'Pauzeer' : 'Speel'}">${playing ? '⏸' : '▶'}</button>`;
+        this.vul(`<img src="${img}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover">`,
+                 `<strong>${veilig(titel)}</strong><small>${veilig(artiest)}</small>`,
+                 rechts);
+        const knop = this.knop.querySelector('.eiland-spotify-knop');
+        if (knop) knop.onclick = async e => { e.stopPropagation(); try { await SpotifyManager.toggle(); } catch (err) { Eiland.melding('Spotify', 'Besturing mislukt', '⛔', 2500); } };
+        return;
+      }
+    }
+
+    // fallback: gebruik Web API zoals vroeger
     if (!Opslag.lees('auth_spotify')) { this.rust(); return; }
-    const now = await Auth.fetchSpotify('https://api.spotify.com/v1/me/player/currently-playing');
-    if (!now || !now.item) { this.rust(); return; }
-    const track = now.item;
+    const nu = await Auth.fetchSpotify('https://api.spotify.com/v1/me/player/currently-playing');
+    if (!nu || !nu.item) { this.rust(); return; }
+    const track = nu.item;
     const titel = track.name;
     const artiest = track.artists.map(a => a.name).join(', ');
     const img = track.album.images && track.album.images[0] ? track.album.images[0].url : '';
-    const playing = !!now.is_playing;
     this.vorm('groot');
-    const rechts = `<button class="eiland-spotify-knop" type="button" aria-label="${playing ? 'Pauzeer' : 'Speel'}">${playing ? '⏸' : '▶'}</button>`;
+    const rechts = `<button class="eiland-spotify-knop" type="button" aria-label="${nu.is_playing ? 'Pauzeer' : 'Speel'}">${nu.is_playing ? '⏸' : '▶'}</button>`;
     this.vul(`<img src="${img}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover">`,
              `<strong>${veilig(titel)}</strong><small>${veilig(artiest)}</small>`,
              rechts);
     const knop = this.knop.querySelector('.eiland-spotify-knop');
     if (knop) {
-      knop.onclick = async (e) => {
+      knop.onclick = async e => {
         e.stopPropagation();
         try {
           const token = await Auth.krijgToken('spotify');
           if (!token) throw new Error('Geen Spotify-token');
-          if (playing) {
-            await fetch('https://api.spotify.com/v1/me/player/pause', { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
-          } else {
-            await fetch('https://api.spotify.com/v1/me/player/play', { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
-          }
+          if (nu.is_playing) await fetch('https://api.spotify.com/v1/me/player/pause', { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
+          else await fetch('https://api.spotify.com/v1/me/player/play', { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
           setTimeout(() => this.toonSpotify(), 500);
-        } catch (err) {
-          console.warn('Spotify play/pause mislukt', err);
-          Eiland.melding('Spotify', 'Besturing mislukt', '⛔', 2500);
-        }
+        } catch (err) { console.warn('Spotify play/pause mislukt', err); Eiland.melding('Spotify', 'Besturing mislukt', '⛔', 2500); }
       };
     }
   } catch (e) {
-    // geen token of netwerk fout => rust
+    this.rust();
   }
 };
 
 Eiland.startSpotifyPoll = function () {
+  // als SDK-manager er is: luister naar events
+  if (window.SpotifyManager && SpotifyManager.getState) {
+    if (this.spotifyListener) return;
+    this.spotifyListener = () => this.toonSpotify();
+    window.addEventListener('spotify:state', this.spotifyListener);
+    window.addEventListener('spotify:ready', this.spotifyListener);
+    this.toonSpotify();
+    return;
+  }
+  // fallback: poll via Web API
   if (this.spotifyInterval) return;
   this.toonSpotify();
   this.spotifyInterval = setInterval(() => this.toonSpotify(), 8000);
 };
 
 Eiland.stopSpotifyPoll = function () {
-  if (!this.spotifyInterval) return;
-  clearInterval(this.spotifyInterval);
-  this.spotifyInterval = null;
+  if (this.spotifyListener) {
+    window.removeEventListener('spotify:state', this.spotifyListener);
+    window.removeEventListener('spotify:ready', this.spotifyListener);
+    this.spotifyListener = null;
+  }
+  if (this.spotifyInterval) { clearInterval(this.spotifyInterval); this.spotifyInterval = null; }
   this.rust();
 };
 

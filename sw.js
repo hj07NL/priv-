@@ -5,7 +5,7 @@
 const VERSIE = 'privé-v4';
 const BESTANDEN = [
   './', 'index.html', 'manifest.webmanifest', 'css/stijl.css',
-  'js/opslag.js', 'js/auth.js', 'js/kern.js', 'js/weer.js', 'js/achtergrond.js', 'js/eiland.js', 'js/start.js',
+  'js/opslag.js', 'js/auth.js', 'js/kern.js', 'js/weer.js', 'js/achtergrond.js', 'js/eiland.js', 'js/spotify.js', 'js/start.js',
   'js/apps/home.js', 'js/apps/websites.js', 'js/apps/agenda.js', 'js/apps/planner.js',
   'js/apps/browser.js', 'js/apps/siri.js', 'js/apps/instellingen.js', 'data/mijn-websites.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'
