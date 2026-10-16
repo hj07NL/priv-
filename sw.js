@@ -1,8 +1,8 @@
 /* SERVICE WORKER: een script dat op de achtergrond draait en de bestanden van Privé bewaart.
    Daardoor opent Privé ook zonder internet, en voelt het als een echte app.
-   Pas je iets aan en zie je het niet? Verhoog dan het versienummer hieronder, bv. naar 'privé-v4'. */
+   Pas je iets aan en zie je het niet? Verhoog dan het versienummer hieronder, bv. naar 'privé-v5'. */
 
-const VERSIE = 'privé-v4';
+const VERSIE = 'privé-v5';
 const BESTANDEN = [
   './', 'index.html', 'manifest.webmanifest', 'css/stijl.css',
   'js/opslag.js', 'js/auth.js', 'js/kern.js', 'js/weer.js', 'js/achtergrond.js', 'js/eiland.js', 'js/spotify.js', 'js/start.js',
@@ -11,19 +11,16 @@ const BESTANDEN = [
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'
 ];
 
-// bij installeren: alle bestanden in de cache (opslag) zetten
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSIE).then(c => c.addAll(BESTANDEN)));
   self.skipWaiting();
 });
 
-// oude versies van de cache weggooien
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(namen => Promise.all(namen.filter(n => n !== VERSIE).map(n => caches.delete(n)))));
   self.clients.claim();
 });
 
-// eerst het internet proberen (dan heb je altijd de nieuwste versie), lukt dat niet: uit de cache
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(

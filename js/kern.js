@@ -11,10 +11,9 @@
    Klaar: hij staat vanzelf in het dock. */
 
 const Prive = {
-  apps: [],          // alle geregistreerde apps
-  open: null,        // de app die nu open is
+  apps: [],
+  open: null,
 
-  /* een app aanmelden */
   registreer(app) {
     this.apps.push(app);
   },
@@ -23,7 +22,6 @@ const Prive = {
     return this.apps.find(a => a.id === id);
   },
 
-  /* berichten tussen onderdelen, bijvoorbeeld 'taken' als er een taak bij komt */
   zend(naam, data) {
     window.dispatchEvent(new CustomEvent('privé:' + naam, { detail: data }));
   },
@@ -31,21 +29,31 @@ const Prive = {
     window.addEventListener('privé:' + naam, e => functie(e.detail));
   },
 
-  /* het dock onderin bouwen uit de lijst met apps */
   bouwDock() {
     const dock = document.getElementById('dock');
     if (!dock) return;
     dock.innerHTML = '';
     this.apps.filter(a => a.inDock !== false).forEach(app => {
-      const knop = el('button', { class: 'dock-app', type: 'button', 'aria-label': app.naam, title: app.naam });
-      knop.innerHTML = `<span class="app-icoon" style="background:${app.kleur}">${typeof app.icoon === 'function' ? app.icoon() : app.icoon}</span>
+      const knop = el('button', {
+        class: 'dock-app',
+        type: 'button',
+        'aria-label': app.naam,
+        title: app.naam,
+        tabindex: '0'
+      });
+      knop.innerHTML = `<span class="app-icoon ${app.kleur === 'oranje' ? 'oranje' : 'blauw'}">${typeof app.icoon === 'function' ? app.icoon() : app.icoon}</span>
                         <span class="dock-naam">${app.naam}</span>`;
       knop.addEventListener('click', () => this.start(app.id));
+      knop.addEventListener('keyup', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.start(app.id);
+        }
+      });
       dock.appendChild(knop);
     });
   },
 
-  /* een app starten. Siri heeft geen venster maar een eigen laag, daarom eigen start() */
   start(id, opties) {
     const app = this.app(id);
     if (!app) return;
@@ -53,7 +61,6 @@ const Prive = {
     this.openVenster(app, opties);
   },
 
-  /* een app openen in een glazen venster */
   openVenster(app, opties) {
     this.sluit(true);
     const laag = document.getElementById('venster-laag');
@@ -70,19 +77,17 @@ const Prive = {
       <div class="venster-inhoud"></div>`;
     laag.appendChild(venster);
     laag.classList.add('actief');
-    document.body.classList.add('venster-open');   // op de telefoon verdwijnt dan het dock
+    document.body.classList.add('venster-open');
 
-    // sluiten met het rode lampje, de Klaar-knop of door naast het venster te klikken
     venster.querySelector('.rood').addEventListener('click', () => this.sluit());
     venster.querySelector('.klaar-knop').addEventListener('click', () => this.sluit());
     laag.onclick = e => { if (e.target === laag) this.sluit(); };
 
     this.open = app;
     app.maak(venster.querySelector('.venster-inhoud'), opties);
-    history.replaceState(null, '', '#' + app.id);   // het adres wordt bv. privé/#planner, handig als link
+    history.replaceState(null, '', '#' + app.id);
   },
 
-  /* het open venster sluiten */
   sluit(direct) {
     const laag = document.getElementById('venster-laag');
     const venster = laag.querySelector('.venster');
@@ -92,16 +97,12 @@ const Prive = {
     if (!venster) return;
     history.replaceState(null, '', location.pathname);
     if (direct) { venster.remove(); laag.classList.remove('actief'); return; }
-    venster.classList.add('weg');                    // eerst de animatie, daarna weghalen
+    venster.classList.add('weg');
     laag.classList.remove('actief');
     setTimeout(() => venster.remove(), 220);
   }
 };
 
-
-/* ---------- HULPFUNCTIES die alle apps gebruiken ---------- */
-
-/* snel een HTML-element maken: el('div', { class: 'kaart' }, 'tekst') */
 function el(tag, attrs = {}, tekst) {
   const e = document.createElement(tag);
   Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
@@ -109,23 +110,21 @@ function el(tag, attrs = {}, tekst) {
   return e;
 }
 
-/* tekst veilig maken voor in HTML, zodat < en > geen code worden */
 function veilig(tekst) {
   return String(tekst ?? '').replace(/[&<>"']/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[t]));
 }
 
-/* datums */
 const DAGEN = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
 const MAANDEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
 
-function datumTekst(d) {           // Date -> '2026-10-15'
+function datumTekst(d) {
   const p = n => String(n).padStart(2, '0');
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
 }
 function vandaag() { return datumTekst(new Date()); }
 function plusDagen(n) { const d = new Date(); d.setDate(d.getDate() + n); return datumTekst(d); }
 
-function mooieDatum(tekst) {       // '2026-10-15' -> 'vandaag', 'morgen' of 'vrijdag 16 oktober'
+function mooieDatum(tekst) {
   if (tekst === vandaag()) return 'vandaag';
   if (tekst === plusDagen(1)) return 'morgen';
   if (tekst === plusDagen(-1)) return 'gisteren';
@@ -133,7 +132,6 @@ function mooieDatum(tekst) {       // '2026-10-15' -> 'vandaag', 'morgen' of 'vr
   return DAGEN[d.getDay()] + ' ' + d.getDate() + ' ' + MAANDEN[d.getMonth()];
 }
 
-/* een link maken die een afspraak klaarzet in Google Agenda (zonder ingewikkelde koppeling) */
 function googleAgendaLink(titel, datum, tijd, minuten = 60) {
   const schoon = s => s.replace(/[-:]/g, '');
   let dates;
@@ -149,5 +147,4 @@ function googleAgendaLink(titel, datum, tijd, minuten = 60) {
   return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(titel) + '&dates=' + dates;
 }
 
-// Compatibiliteit: exposeer Prive onder meerdere namen zodat oude code (met accenten) blijft werken
-try { window.Prive = Prive; window.prive = Prive; window['privé'] = Prive; } catch (e) { /* noop */ }
+try { window.Prive = Prive; window.prive = Prive; window['privé'] = Prive; } catch (e) {}

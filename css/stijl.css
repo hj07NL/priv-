@@ -1,12 +1,177 @@
-/* Dynamic Island: Spotify-knop stijlen */
-.eiland-rechts .eiland-spotify-knop {
-  border: 0;
-  background: rgba(255,255,255,0.06);
-  color: #fff;
-  padding: 8px 10px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
+/* css/stijl.css
+   Combinatie: macOS-style Liquid Glass + Futuristisch (oranje + donkerblauw).
+   Commentaar in Nederlands uitlegt WAT elke sectie doet. */
+
+/* ---------- Variabelen: kleuren, maten en animatie ---------- */
+:root{
+  /* basis kleuren */
+  --tekst: #f5f5f7;
+  --zacht: rgba(235,235,245,0.68);
+
+  /* donkere, chique achtergrond */
+  --achtergrond-diep: #031026;
+  --achtergrond-mid:  #071631;
+
+  /* oranje accent */
+  --accent-oranje-a: #FF9F0A;
+  --accent-oranje-b: #FF7A00;
+  --accent-glow: rgba(255,140,40,0.12);
+
+  /* glas look */
+  --glas-bg: rgba(255,255,255,0.02);
+  --glas-border: rgba(255,255,255,0.06);
+  --glas-blur: 14px;
+  --hoek-radius: 16px;
+
+  /* animatie en schaduw */
+  --veer: cubic-bezier(.16,.8,.24,1);
+  --schaduw: 0 18px 50px rgba(3,6,18,0.6);
+
+  /* safe-area voor iPhone notch */
+  --boven: env(safe-area-inset-top, 0px);
+  --onder: env(safe-area-inset-bottom, 0px);
 }
-.eiland-rechts .eiland-spotify-knop:active { transform: scale(.98); }
-.eiland-links img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; display:block; }
+
+/* ---------- Basispagina en achtergrond ---------- */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, "Segoe UI", sans-serif;
+  color: var(--tekst);
+  background:
+    radial-gradient(900px 420px at 10% 12%, rgba(10,40,90,0.25), transparent),
+    linear-gradient(180deg, var(--achtergrond-diep), var(--achtergrond-mid));
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.grid-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.008) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.006) 1px, transparent 1px);
+  background-size: 400px 400px, 400px 400px;
+  mix-blend-mode: overlay;
+  opacity: 0.45;
+}
+
+/* ---------- Liquid Glass basis (macOS-stijl) ---------- */
+.glas {
+  border-radius: var(--hoek-radius);
+  background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.008));
+  border: 1px solid var(--glas-border);
+  backdrop-filter: blur(var(--glas-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glas-blur)) saturate(120%);
+  box-shadow: var(--schaduw);
+  transition: transform .26s var(--veer), box-shadow .26s var(--veer);
+  position: relative; overflow: hidden;
+}
+
+.glas::before {
+  content: "";
+  position: absolute;
+  left: -30%; right: -30%;
+  top: 0;
+  height: 3.6px;
+  background: linear-gradient(90deg, transparent, rgba(255,160,60,0.65), transparent);
+  transform: skewX(-12deg);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.glas:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 72px rgba(3,6,18,0.72);
+}
+
+/* ---------- Dock: gecentreerd, capsule-achtergrond ---------- */
+#dock {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(12px + var(--onder));
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.5);
+  z-index: 60;
+}
+
+.dock-app {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .18s var(--veer), box-shadow .18s var(--veer);
+}
+.dock-app:focus {
+  outline: 3px solid rgba(255,160,60,0.12);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+
+.app-icoon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 8px 26px rgba(2,6,23,0.45);
+  transition: transform .18s var(--veer), filter .18s var(--veer);
+}
+
+.app-icoon.oranje {
+  background: linear-gradient(135deg, var(--accent-oranje-a), var(--accent-oranje-b));
+}
+.app-icoon.blauw {
+  background: linear-gradient(135deg,#0A6FB8,#043E74);
+}
+
+.dock-app:hover .app-icoon { transform: translateY(-6px) scale(1.06); filter: saturate(1.05); }
+
+/* ---------- Bureaublad/grid widgets ---------- */
+#bureaublad {
+  padding: calc(18px + var(--boven)) 20px calc(120px + var(--onder));
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  align-items: start;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.widget {
+  padding: 14px;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.widget .kop { font-weight: 600; color: var(--tekst); margin-bottom: 6px; }
+.widget .sub { color: var(--zacht); font-size: 0.92rem; }
+
+.groot-getal { font-size: 2.4rem; font-weight: 700; color: var(--tekst); }
+
+/* ---------- Toegankelijkheid en reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .glas, .dock-app, .app-icoon, .venster { transition: none !important; animation: none !important; transform: none !important; }
+}
+
+/* ---------- Responsive: kleinere schermen ---------- */
+@media (max-width:420px) {
+  .app-icoon { width:44px; height:44px; border-radius:10px; }
+  #dock { gap:8px; padding:6px 10px; bottom: calc(8px + var(--onder)); }
+  #bureaublad { padding: calc(12px + var(--boven)) 12px calc(90px + var(--onder)); gap:12px; }
+}
