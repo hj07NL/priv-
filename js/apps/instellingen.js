@@ -80,7 +80,7 @@ const Instellingen = {
       const nu = instellingen();
       Opslag.schrijf('instellingen', { ...nu, plaats: p.naam, lat: p.lat, lon: p.lon });
       Weer.data = null;
-      Prive.zend('instellingen');
+      priv-.zend('instellingen');
       body.querySelector('[name="plaats"]').value = p.naam;
       melding.textContent = 'Weer staat nu op ' + p.naam + '.';
     };
@@ -102,12 +102,12 @@ const Instellingen = {
     const ontkoppel = body.querySelector('[data-actie="ontkoppel"]');
     if (ontkoppel) ontkoppel.addEventListener('click', () => { bewaarInstelling('agendaLink', ''); this.teken(body); });
     const koppel = body.querySelector('[data-actie="agenda"]');
-    if (koppel) koppel.addEventListener('click', () => Prive.start('agenda'));
+    if (koppel) koppel.addEventListener('click', () => priv-.start('agenda'));
 
     // back-up downloaden als .json-bestand
     body.querySelector('[data-actie="export"]').addEventListener('click', () => {
       const blob = new Blob([JSON.stringify(Opslag.alles(), null, 2)], { type: 'application/json' });
-      const a = el('a', { href: URL.createObjectURL(blob), download: 'prive-backup-' + vandaag() + '.json' });
+      const a = el('a', { href: URL.createObjectURL(blob), download: 'priv--backup-' + vandaag() + '.json' });
       a.click();
     });
     // back-up terugzetten
@@ -117,14 +117,14 @@ const Instellingen = {
       try {
         Opslag.zetTerug(JSON.parse(await bestand.text()));
         Eiland.melding('Back-up teruggezet', 'Alles staat er weer', '✓');
-        Prive.zend('instellingen'); Prive.zend('taken'); Prive.zend('websites');
+        priv-.zend('instellingen'); priv-.zend('taken'); priv-.zend('websites');
         this.teken(body);
       } catch (err) { alert('Dit is geen geldige back-up.'); }
     });
   }
 };
 
-Prive.registreer({
+priv-.registreer({
   id: 'instellingen',
   naam: 'Instellingen',
   kleur: 'linear-gradient(160deg, #AEAEB2, #636366)',

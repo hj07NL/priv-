@@ -168,7 +168,7 @@ const Browser = {
   }
 };
 
-Prive.registreer({
+priv-.registreer({
   id: 'browser',
   naam: 'Browser',
   kleur: 'linear-gradient(160deg, #64D2FF, #0A84FF)',

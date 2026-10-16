@@ -7,7 +7,7 @@
 const Websites = {
   lijst() {
     const eigen = Opslag.lees('websites', []).map(w => ({ ...w, eigen: true }));
-    return [...PRIVE_WEBSITES, ...eigen];
+    return [...priv-_WEBSITES, ...eigen];
   },
 
   /* het nummer van een TikTok-video uit de link halen: .../video/7301234567890 -> 7301234567890 */
@@ -54,7 +54,7 @@ const Websites = {
       };
       Opslag.schrijf('websites', [...Opslag.lees('websites', []), nieuw]);
       form.reset(); form.classList.add('verborgen');
-      Prive.zend('websites');
+      priv-.zend('websites');
       this.tekenRaster(body);
     });
 
@@ -98,16 +98,16 @@ const Websites = {
     raster.querySelectorAll('.tiktok-laad').forEach(b => b.addEventListener('click', () => {
       b.parentElement.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${b.dataset.id}" allow="encrypted-media; fullscreen" allowfullscreen title="TikTok-video"></iframe>`;
     }));
-    raster.querySelectorAll('[data-browser]').forEach(b => b.addEventListener('click', () => Prive.start('browser', { url: b.dataset.browser })));
+    raster.querySelectorAll('[data-browser]').forEach(b => b.addEventListener('click', () => priv-.start('browser', { url: b.dataset.browser })));
     raster.querySelectorAll('[data-weg]').forEach(b => b.addEventListener('click', () => {
       Opslag.schrijf('websites', Opslag.lees('websites', []).filter(w => w.id !== b.dataset.weg));
-      Prive.zend('websites');
+      priv-.zend('websites');
       this.tekenRaster(body);
     }));
   }
 };
 
-Prive.registreer({
+priv-.registreer({
   id: 'websites',
   naam: 'Websites',
   kleur: 'linear-gradient(160deg, #FF375F, #8A3FFC)',
