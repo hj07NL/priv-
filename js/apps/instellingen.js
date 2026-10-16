@@ -38,10 +38,27 @@ const Instellingen = {
         <label class="inst-rij schakel-rij"><span>Hardop antwoorden</span><input type="checkbox" class="schakelaar" name="siriPraat" ${s.siriPraat ? 'checked' : ''}></label>
       </div>
 
+      <!-- Google en Spotify koppelen -->
       <div class="inst-groep">
-        <h3>Agenda</h3>
-        <div class="inst-rij"><span>${s.agendaLink ? 'Google Agenda is gekoppeld' : 'Nog niet gekoppeld'}</span>
-          ${s.agendaLink ? '<button class="knop rood-tekst" type="button" data-actie="ontkoppel">Ontkoppel</button>' : '<button class="knop" type="button" data-actie="agenda">Koppelen</button>'}
+        <h3>Google</h3>
+        <div class="inst-rij">
+          <span>Google Client ID</span>
+          <input name="googleClientId" placeholder="Voer je Google Client ID in" value="${veilig(Opslag.lees('oauth', {}).googleClientId || '')}">
+        </div>
+        <div class="inst-rij">
+          <span>Agenda</span>
+          <button class="knop" type="button" data-actie="koppel-google">${Opslag.lees('auth_google') ? 'Ontkoppel' : 'Koppel Google'}</button>
+        </div>
+      </div>
+
+      <div class="inst-groep">
+        <h3>Spotify</h3>
+        <div class="inst-rij">
+          <span>Spotify Client ID</span>
+          <input name="spotifyClientId" placeholder="Voer je Spotify Client ID in" value="${veilig(Opslag.lees('oauth', {}).spotifyClientId || '')}">
+        </div>
+        <div class="inst-rij">
+          <button class="knop" type="button" data-actie="koppel-spotify">${Opslag.lees('auth_spotify') ? 'Ontkoppel' : 'Koppel Spotify'}</button>
         </div>
       </div>
 
@@ -104,6 +121,27 @@ const Instellingen = {
     const koppel = body.querySelector('[data-actie="agenda"]');
     if (koppel) koppel.addEventListener('click', () => privé.start('agenda'));
 
+    // OAuth client-id velden opslaan
+    const googleInput = body.querySelector('[name="googleClientId"]');
+    if (googleInput) googleInput.addEventListener('change', e => {
+      const oauth = Opslag.lees('oauth', {}); oauth.googleClientId = e.target.value.trim(); Opslag.schrijf('oauth', oauth);
+    });
+    const spotifyInput = body.querySelector('[name="spotifyClientId"]');
+    if (spotifyInput) spotifyInput.addEventListener('change', e => {
+      const oauth = Opslag.lees('oauth', {}); oauth.spotifyClientId = e.target.value.trim(); Opslag.schrijf('oauth', oauth);
+    });
+    // Koppel / ontkoppel knoppen
+    const koppelGoogle = body.querySelector('[data-actie="koppel-google"]');
+    if (koppelGoogle) koppelGoogle.addEventListener('click', () => {
+      if (Opslag.lees('auth_google')) { Auth.ontkoppel('google'); this.teken(body); }
+      else Auth.start('google');
+    });
+    const koppelSpotify = body.querySelector('[data-actie="koppel-spotify"]');
+    if (koppelSpotify) koppelSpotify.addEventListener('click', () => {
+      if (Opslag.lees('auth_spotify')) { Auth.ontkoppel('spotify'); this.teken(body); }
+      else Auth.start('spotify');
+    });
+
     // back-up downloaden als .json-bestand
     body.querySelector('[data-actie="export"]').addEventListener('click', () => {
       const blob = new Blob([JSON.stringify(Opslag.alles(), null, 2)], { type: 'application/json' });
@@ -128,6 +166,6 @@ privé.registreer({
   id: 'instellingen',
   naam: 'Instellingen',
   kleur: 'linear-gradient(160deg, #AEAEB2, #636366)',
-  icoon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
+  icoon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.5l-1.8 1.8"/></svg>',
   maak(body) { Instellingen.teken(body); }
 });
