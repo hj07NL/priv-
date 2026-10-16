@@ -10,7 +10,7 @@
    3. zet in index.html een <script src="js/apps/cijfers.js"></script> bij de andere apps
    Klaar: hij staat vanzelf in het dock. */
 
-const privé = {
+const Prive = {
   apps: [],          // alle geregistreerde apps
   open: null,        // de app die nu open is
 
@@ -34,6 +34,7 @@ const privé = {
   /* het dock onderin bouwen uit de lijst met apps */
   bouwDock() {
     const dock = document.getElementById('dock');
+    if (!dock) return;
     dock.innerHTML = '';
     this.apps.filter(a => a.inDock !== false).forEach(app => {
       const knop = el('button', { class: 'dock-app', type: 'button', 'aria-label': app.naam, title: app.naam });
@@ -147,3 +148,6 @@ function googleAgendaLink(titel, datum, tijd, minuten = 60) {
   }
   return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(titel) + '&dates=' + dates;
 }
+
+// Compatibiliteit: exposeer Prive onder meerdere namen zodat oude code (met accenten) blijft werken
+try { window.Prive = Prive; window.prive = Prive; window['privé'] = Prive; } catch (e) { /* noop */ }
