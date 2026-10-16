@@ -278,7 +278,7 @@ const REGELS = [
   {
     past: t => /\b(weer|regen|regent|temperatuur|graden|warm|koud|paraplu|zon|sneeuw)\b/.test(t),
     doe: async t => {
-      if (instellingen().lat === null) return { tekst: 'Ik weet nog niet waar je bent. Stel je plaats in bij Instellingen.', knop: { tekst: 'Open Instellingen', doe: () => { Siri.sluit(); priv-.start('instellingen'); } } };
+      if (instellingen().lat === null) return { tekst: 'Ik weet nog niet waar je bent. Stel je plaats in bij Instellingen.', knop: { tekst: 'Open Instellingen', doe: () => { Siri.sluit(); privé.start('instellingen'); } } };
       const d = await Weer.haal();
       if (!d) return { tekst: 'Ik kan het weer nu niet ophalen.' };
       if (/\bmorgen\b/.test(t)) {
@@ -315,7 +315,7 @@ const REGELS = [
     doe: t => {
       const url = t.match(/\b(?:ga naar|open|bezoek)\s+(\S+\.[a-z]{2,}\S*)/)[1];
       Siri.sluit();
-      priv-.start('browser', { url });
+      privé.start('browser', { url });
       return null;
     }
   },
@@ -324,7 +324,7 @@ const REGELS = [
     doe: t => {
       const id = APP_NAMEN[Object.keys(APP_NAMEN).find(n => t.includes(n))];
       Siri.sluit();
-      priv-.start(id);
+      privé.start(id);
       return null;
     }
   },
@@ -376,7 +376,7 @@ const REGELS = [
   }
 ];
 
-priv-.registreer({
+privé.registreer({
   id: 'siri',
   naam: 'Siri',
   kleur: 'radial-gradient(circle at 30% 25%, #64D2FF, #5E5CE6 45%, #BF5AF2 70%, #FF375F)',

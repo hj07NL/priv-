@@ -14,7 +14,7 @@ const Planner = {
 
   bewaar(lijst) {
     Opslag.schrijf('taken', lijst);
-    priv-.zend('taken');                 // widgets en het eiland werken zich bij
+    privé.zend('taken');                 // widgets en het eiland werken zich bij
   },
 
   voegToe(taak) {
@@ -126,7 +126,7 @@ const Planner = {
   }
 };
 
-priv-.registreer({
+privé.registreer({
   id: 'planner',
   naam: 'Planner',
   kleur: 'linear-gradient(160deg, #FF9F0A, #FF6B00)',

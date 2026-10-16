@@ -6,11 +6,11 @@
 
    ZELF EEN APP TOEVOEGEN:
    1. maak een bestand in js/apps/, bijvoorbeeld js/apps/cijfers.js
-   2. zet daarin:  priv-.registreer({ id: 'cijfers', naam: 'Cijfers', kleur: '...', icoon: '<svg>...</svg>', maak(body) { ... } });
+   2. zet daarin:  privé.registreer({ id: 'cijfers', naam: 'Cijfers', kleur: '...', icoon: '<svg>...</svg>', maak(body) { ... } });
    3. zet in index.html een <script src="js/apps/cijfers.js"></script> bij de andere apps
    Klaar: hij staat vanzelf in het dock. */
 
-const priv- = {
+const privé = {
   apps: [],          // alle geregistreerde apps
   open: null,        // de app die nu open is
 
@@ -25,10 +25,10 @@ const priv- = {
 
   /* berichten tussen onderdelen, bijvoorbeeld 'taken' als er een taak bij komt */
   zend(naam, data) {
-    window.dispatchEvent(new CustomEvent('priv-:' + naam, { detail: data }));
+    window.dispatchEvent(new CustomEvent('privé:' + naam, { detail: data }));
   },
   luister(naam, functie) {
-    window.addEventListener('priv-:' + naam, e => functie(e.detail));
+    window.addEventListener('privé:' + naam, e => functie(e.detail));
   },
 
   /* het dock onderin bouwen uit de lijst met apps */

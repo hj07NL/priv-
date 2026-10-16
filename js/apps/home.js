@@ -19,7 +19,7 @@ const Home = {
     // klik op een widget = de app openen (behalve als je op een knop of link in de widget klikt)
     b.querySelectorAll('.widget').forEach(w => w.addEventListener('click', e => {
       if (e.target.closest('a, button')) return;
-      priv-.start(w.dataset.app);
+      privé.start(w.dataset.app);
     }));
 
     this.klok();
@@ -126,4 +126,4 @@ const Home = {
 };
 
 /* Home staat niet in het dock, het is het bureaublad zelf */
-priv-.registreer({ id: 'home', naam: 'Home', inDock: false, start() { priv-.sluit(); } });
+privé.registreer({ id: 'home', naam: 'Home', inDock: false, start() { privé.sluit(); } });

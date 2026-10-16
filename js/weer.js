@@ -21,7 +21,7 @@ const Weer = {
       const antwoord = await fetch(url);
       this.data = await antwoord.json();
       this.tijd = Date.now();
-      priv-.zend('weer', this.data);
+      privé.zend('weer', this.data);
       return this.data;
     } catch (e) {
       return null;                                               // geen internet: dan maar geen weer

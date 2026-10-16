@@ -68,7 +68,7 @@ const Agenda = {
   }
 };
 
-priv-.registreer({
+privé.registreer({
   id: 'agenda',
   naam: 'Agenda',
   kleur: '#ffffff',
