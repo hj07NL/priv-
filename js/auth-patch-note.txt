@@ -1,0 +1,5 @@
+/* AUTH: small fix — use the canonical Prive object (no accent) when notifying the rest of the app */
+(function(){
+  // find existing handleRedirect function in js/auth.js and patch it to use Prive
+  // We'll replace occurrences of window.privé and privé.zend with window.Prive and Prive.zend
+})();
