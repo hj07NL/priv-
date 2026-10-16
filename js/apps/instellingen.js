@@ -5,12 +5,12 @@ const Instellingen = {
     const s = instellingen();
     const m = s.wedstrijd;
     body.innerHTML = `
-      <div class="inst-groep">
+      <div class="inst-groep glas">
         <h3>Jij</h3>
         <label class="inst-rij">Naam <input name="naam" value="${veilig(s.naam)}"></label>
       </div>
 
-      <div class="inst-groep">
+      <div class="inst-groep glas">
         <h3>Weer</h3>
         <form class="inst-rij plaats-form">
           <span>Plaats</span>
@@ -25,7 +25,7 @@ const Instellingen = {
       </div>
       <p class="inst-melding"></p>
 
-      <div class="inst-groep">
+      <div class="inst-groep glas">
         <h3>Volgende hockeywedstrijd</h3>
         <label class="inst-rij">Datum <input type="date" name="w-datum" value="${m.datum}"></label>
         <label class="inst-rij">Tijd <input type="time" name="w-tijd" value="${m.tijd}"></label>
@@ -33,13 +33,13 @@ const Instellingen = {
         <label class="inst-rij schakel-rij"><span>Thuiswedstrijd</span><input type="checkbox" class="schakelaar" name="w-thuis" ${m.thuis ? 'checked' : ''}></label>
       </div>
 
-      <div class="inst-groep">
+      <div class="inst-groep glas">
         <h3>Siri</h3>
         <label class="inst-rij schakel-rij"><span>Hardop antwoorden</span><input type="checkbox" class="schakelaar" name="siriPraat" ${s.siriPraat ? 'checked' : ''}></label>
       </div>
 
       <!-- Google en Spotify koppelen -->
-      <div class="inst-groep">
+      <div class="inst-groep glas">
         <h3>Google</h3>
         <div class="inst-rij">
           <span>Google Client ID</span>
@@ -51,7 +51,7 @@ const Instellingen = {
         </div>
       </div>
 
-      <div class="inst-groep">
+      <div class="inst-groep glas">
         <h3>Spotify</h3>
         <div class="inst-rij">
           <span>Spotify Client ID</span>
@@ -62,13 +62,13 @@ const Instellingen = {
         </div>
       </div>
 
-      <div class="inst-groep">
+      <div class="inst-groep glas">
         <h3>Als app installeren</h3>
         <p class="inst-tekst"><b>iPhone:</b> open je site in Safari, tik op het deel-icoon en kies <i>Zet op beginscherm</i>.<br>
            <b>Computer (Chrome/Edge):</b> klik rechts in de adresbalk op het installeer-icoon.</p>
       </div>
 
-      <div class="inst-groep">
+      <div class="inst-groep glas">
         <h3>Back-up</h3>
         <p class="inst-tekst">Je taken en instellingen staan alleen op dit apparaat. Met een back-up zet je ze op een ander apparaat.</p>
         <div class="inst-rij">
@@ -97,7 +97,7 @@ const Instellingen = {
       const nu = instellingen();
       Opslag.schrijf('instellingen', { ...nu, plaats: p.naam, lat: p.lat, lon: p.lon });
       Weer.data = null;
-      privé.zend('instellingen');
+      Prive.zend('instellingen');
       body.querySelector('[name="plaats"]').value = p.naam;
       melding.textContent = 'Weer staat nu op ' + p.naam + '.';
     };
@@ -115,22 +115,7 @@ const Instellingen = {
       try { zetPlaats(await Weer.mijnLocatie()); } catch (err) { melding.textContent = err.message; }
     });
 
-    // agenda
-    const ontkoppel = body.querySelector('[data-actie="ontkoppel"]');
-    if (ontkoppel) ontkoppel.addEventListener('click', () => { bewaarInstelling('agendaLink', ''); this.teken(body); });
-    const koppel = body.querySelector('[data-actie="agenda"]');
-    if (koppel) koppel.addEventListener('click', () => privé.start('agenda'));
-
-    // OAuth client-id velden opslaan
-    const googleInput = body.querySelector('[name="googleClientId"]');
-    if (googleInput) googleInput.addEventListener('change', e => {
-      const oauth = Opslag.lees('oauth', {}); oauth.googleClientId = e.target.value.trim(); Opslag.schrijf('oauth', oauth);
-    });
-    const spotifyInput = body.querySelector('[name="spotifyClientId"]');
-    if (spotifyInput) spotifyInput.addEventListener('change', e => {
-      const oauth = Opslag.lees('oauth', {}); oauth.spotifyClientId = e.target.value.trim(); Opslag.schrijf('oauth', oauth);
-    });
-    // Koppel / ontkoppel knoppen
+    // OAuth knoppen
     const koppelGoogle = body.querySelector('[data-actie="koppel-google"]');
     if (koppelGoogle) koppelGoogle.addEventListener('click', () => {
       if (Opslag.lees('auth_google')) { Auth.ontkoppel('google'); this.teken(body); }
@@ -155,17 +140,17 @@ const Instellingen = {
       try {
         Opslag.zetTerug(JSON.parse(await bestand.text()));
         Eiland.melding('Back-up teruggezet', 'Alles staat er weer', '✓');
-        privé.zend('instellingen'); privé.zend('taken'); privé.zend('websites');
+        Prive.zend('instellingen'); Prive.zend('taken'); Prive.zend('websites');
         this.teken(body);
       } catch (err) { alert('Dit is geen geldige back-up.'); }
     });
   }
 };
 
-privé.registreer({
+Prive.registreer({
   id: 'instellingen',
   naam: 'Instellingen',
   kleur: 'linear-gradient(160deg, #AEAEB2, #636366)',
-  icoon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.5l-1.8 1.8"/></svg>',
+  icoon: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.5l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.5l-1.8-1.8"/></svg>',
   maak(body) { Instellingen.teken(body); }
 });
