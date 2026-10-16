@@ -112,6 +112,53 @@ const Eiland = {
   }
 };
 
+/* ---------- Spotify in Dynamic Island ---------- */
+Eiland.spotifyInterval = null;
+
+Eiland.toonSpotify = async function () {
+  try {
+    if (!Opslag.lees('auth_spotify')) {
+      this.rust();
+      return;
+    }
+    const nu = await Auth.fetchSpotify('https://api.spotify.com/v1/me/player/currently-playing');
+    if (!nu || !nu.item) {
+      this.rust();
+      return;
+    }
+    const track = nu.item;
+    const titel = track.name;
+    const artiest = track.artists.map(a => a.name).join(', ');
+    const img = track.album.images && track.album.images[0] ? track.album.images[0].url : '';
+    this.vorm('groot');
+    this.vul(
+      `<img src="${img}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover">`,
+      `<strong>${veilig(titel)}</strong><small>${veilig(artiest)}</small>`,
+      nu.is_playing ? '▶' : '▮▮'
+    );
+  } catch (e) {
+    // geen token of netwerk fout => gewoon rustig teruggaan
+  }
+};
+
+Eiland.startSpotifyPoll = function () {
+  if (this.spotifyInterval) return;
+  this.toonSpotify();
+  this.spotifyInterval = setInterval(() => this.toonSpotify(), 8000);
+};
+
+Eiland.stopSpotifyPoll = function () {
+  if (!this.spotifyInterval) return;
+  clearInterval(this.spotifyInterval);
+  this.spotifyInterval = null;
+  this.rust();
+};
+
+window.addEventListener('privé:auth', () => {
+  if (Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll();
+  else Eiland.stopSpotifyPoll();
+});
+
 /* een kort geluidje maken met de Web Audio API (geen geluidsbestand nodig) */
 function piep() {
   try {
