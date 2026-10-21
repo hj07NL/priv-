@@ -1,65 +1,425 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Privé</title>
+/* Privé — Liquid Glass stijl voor de browser-app. */
+:root {
+  --bg: #05070f;
+  --bg-2: #0a1220;
+  --glas: rgba(255, 255, 255, 0.12);
+  --glas-sterk: rgba(255, 255, 255, 0.2);
+  --rand: rgba(255, 255, 255, 0.22);
+  --tekst: #edf5ff;
+  --tekst-2: #aebdd6;
+  --zacht: rgba(237, 245, 255, 0.7);
+  --accent-blauw: #7cc8ff;
+  --accent-blauw-2: #5b8cff;
+  --accent-oranje: #ffbf7a;
+  --accent-oranje-2: #ff7a59;
+  --success: #7df9c8;
+  --shadow: 0 22px 60px rgba(6, 10, 22, 0.52);
+}
 
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#05070f">
-    <meta name="description" content="Privé, mijn eigen besturingssysteem in de browser.">
+* { box-sizing: border-box; }
 
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" href="icons/icon-192.png">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Privé">
+html, body {
+  margin: 0;
+  min-height: 100%;
+  font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: radial-gradient(circle at top, rgba(92, 124, 255, 0.28), transparent 35%),
+              linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  color: var(--tekst);
+}
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap">
+body {
+  min-height: 100vh;
+  padding: max(22px, env(safe-area-inset-top)) 16px calc(120px + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+}
 
-    <link rel="stylesheet" href="css/stijl.css?v=5">
-</head>
-<body>
-    <div id="achtergrond" aria-hidden="true">
-        <div class="aurora a1"></div>
-        <div class="aurora a2"></div>
-        <div class="aurora a3"></div>
-        <div class="wolken"></div>
-        <canvas id="weer-canvas"></canvas>
-    </div>
+button, input, select, textarea {
+  font: inherit;
+}
 
-    <button id="eiland" type="button" aria-label="Dynamic Island">
-        <span class="eiland-links"></span>
-        <span class="eiland-midden"></span>
-        <span class="eiland-rechts"></span>
-    </button>
+#achtergrond {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
 
-    <main id="bureaublad"></main>
-    <nav id="dock" aria-label="Apps"></nav>
-    <div id="venster-laag"></div>
-    <div id="siri-laag"></div>
+.aurora, .wolken {
+  position: absolute;
+  inset: auto auto 0 0;
+  width: 120%;
+  height: 120%;
+  filter: blur(40px);
+  opacity: 0.7;
+}
 
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    <script src="js/opslag.js?v=5"></script>
-    <script src="js/auth.js?v=5"></script>
-    <script src="js/spotify.js?v=5"></script>
-    <script src="js/kern.js?v=5"></script>
-    <script src="js/weer.js?v=5"></script>
-    <script src="js/achtergrond.js?v=5"></script>
-    <script src="js/eiland.js?v=5"></script>
-    <script src="data/mijn-websites.js?v=5"></script>
+.aurora.a1 {
+  background: radial-gradient(circle at 18% 28%, rgba(122, 149, 255, 0.8), transparent 18%);
+  transform: translate(-8%, 10%);
+}
 
-    <script src="js/apps/home.js?v=5"></script>
-    <script src="js/apps/websites.js?v=5"></script>
-    <script src="js/apps/agenda.js?v=5"></script>
-    <script src="js/apps/planner.js?v=5"></script>
-    <script src="js/apps/browser.js?v=5"></script>
-    <script src="js/apps/siri.js?v=5"></script>
-    <script src="js/apps/instellingen.js?v=5"></script>
+.aurora.a2 {
+  background: radial-gradient(circle at 60% 20%, rgba(72, 214, 255, 0.65), transparent 20%);
+  transform: translate(14%, -8%);
+}
 
-    <script src="js/start.js?v=5"></script>
-</body>
-</html>
+.aurora.a3 {
+  background: radial-gradient(circle at 78% 32%, rgba(255, 166, 103, 0.38), transparent 20%);
+  transform: translate(8%, 10%);
+}
+
+.wolken {
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent 42%);
+  opacity: 0.25;
+}
+
+#bureaublad {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.glas {
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.07));
+  border: 1px solid var(--rand);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -8px 18px rgba(255,255,255,0.04), var(--shadow);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+}
+
+.widget {
+  position: relative;
+  padding: 18px 18px 16px;
+  border-radius: 28px;
+  min-height: 150px;
+  overflow: hidden;
+}
+
+.widget::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+  pointer-events: none;
+}
+
+.widget > * {
+  position: relative;
+  z-index: 1;
+}
+
+.widget-kop,
+.groet,
+.klok-tijd,
+.klok-datum,
+.widget-sub,
+.groot-getal {
+  margin: 0;
+}
+
+.groet {
+  font-size: 0.85rem;
+  color: var(--zacht);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.klok-tijd {
+  font-size: clamp(2.5rem, 7vw, 4.2rem);
+  line-height: 1;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.klok-datum {
+  margin-top: 8px;
+  color: var(--tekst-2);
+}
+
+.widget-kop {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--zacht);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.groot-getal {
+  font-size: clamp(2rem, 5vw, 3.1rem);
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.widget-sub {
+  margin-top: 10px;
+  color: var(--tekst-2);
+  line-height: 1.45;
+}
+
+#dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 8;
+  width: min(92vw, 760px);
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 28px;
+  background: rgba(18, 24, 39, 0.36);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 16px 42px rgba(0,0,0,0.28);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+}
+
+.dock-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 68px;
+  padding: 8px 10px 6px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--tekst);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.dock-app:hover,
+.dock-app:focus-visible {
+  background: rgba(255,255,255,0.07);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.app-icoon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.08));
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+.dock-naam {
+  font-size: 0.7rem;
+  color: var(--zacht);
+}
+
+.venster {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: min(92vw, 900px);
+  max-height: min(78vh, 760px);
+  transform: translate(-50%, -50%);
+  border-radius: 28px;
+  overflow: hidden;
+  background: rgba(8, 12, 22, 0.45);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 30px 90px rgba(0,0,0,0.5);
+  z-index: 7;
+}
+
+.venster-balk {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.03);
+}
+
+.lampjes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lampje {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: block;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+}
+
+.lampje.rood { background: #ff5f57; }
+.lampje.geel { background: #ffbd2f; }
+.lampje.groen { background: #28c840; }
+
+.venster-balk h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 1rem;
+  text-align: center;
+  color: var(--tekst);
+}
+
+.klaar-knop {
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.08);
+  color: var(--tekst);
+  cursor: pointer;
+}
+
+.venster-inhoud {
+  padding: 18px;
+  overflow: auto;
+}
+
+#venster-laag,
+#siri-laag {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  background: rgba(10,12,18,0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+#venster-laag.actief,
+#siri-laag.actief {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bediening-knop {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  top: max(24px, env(safe-area-inset-top));
+  z-index: 20;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.1);
+  color: var(--tekst);
+  cursor: pointer;
+  box-shadow: 0 18px 32px rgba(0,0,0,0.18);
+}
+
+.bediening-paneel {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  top: calc(88px + env(safe-area-inset-top));
+  z-index: 19;
+  width: min(300px, calc(100vw - 32px));
+  padding: 14px;
+  border-radius: 24px;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.bediening-paneel.actief {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.bediening-kop {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--zacht);
+  margin-bottom: 12px;
+}
+
+.bediening-item {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 8px;
+  text-align: left;
+  background: rgba(255,255,255,0.06);
+  color: var(--tekst);
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  #bureaublad {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  #dock {
+    width: min(94vw, 420px);
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .dock-app {
+    min-width: 56px;
+    padding-inline: 6px;
+  }
+
+  .app-icoon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .venster {
+    width: min(96vw, 640px);
+    border-radius: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Extra UI fixes: inputs, buttons en instellingen layout */
+.inst-groep { margin-bottom: 18px; }
+.inst-groep h3 { margin: 0 0 10px 0; font-size: 1.1rem; }
+.inst-rij { display: flex; gap: 10px; align-items: center; margin: 8px 0; }
+.inst-rij input[type="text"], .inst-rij input[type="date"], .inst-rij input[type="time"], .inst-rij input[type="email"], .inst-rij input:not([type="checkbox"]) {
+  padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.25); color: var(--tekst);
+}
+.knop { background: linear-gradient(135deg, var(--accent-oranje), var(--accent-oranje-2)); color: #08101b; padding: 8px 12px; border-radius: 8px; border:none; cursor:pointer; }
+.inst-tekst { color: var(--zacht); }
+.inst-melding { color: var(--accent-oranje); margin: 6px 0 12px 0; }
+.schakelaar { width: 20px; height: 20px; }
+
+/* Basis voor widgets en app-elementen */
+section, article, div {
+  border-radius: inherit;
+}
+
+input:focus, button:focus-visible {
+  outline: 2px solid rgba(124, 200, 255, 0.75);
+  outline-offset: 2px;
+}
+
+@media (max-width: 390px) {
+  .dock-naam { display: none; }
+  #dock { justify-content: space-evenly; }
+}

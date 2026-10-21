@@ -1,68 +1,66 @@
-/* START: dit bestand start alles op, nadat alle andere scripts geladen zijn. */
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <title>Privé</title>
 
-// Wacht met opstarten tot de DOM klaar is, anders kan #bureaublad ontbreken.
-document.addEventListener('DOMContentLoaded', () => {
-  try {
-    // Bouw dock en tekenschermen pas nádat alle apps geregistreerd zijn
-    Prive.bouwDock();
-  } catch (e) { console.warn('Prive niet klaar voor bouwDock()', e); }
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#05070f">
+    <meta name="description" content="Privé, mijn eigen besturingssysteem in de browser.">
 
-  try { Home.teken(); } catch (e) { console.warn('Home.teken faalde:', e); }
-  try { Achtergrond.werkBij(); } catch (e) { /* optioneel */ }
-  try { Eiland.rust(); Eiland.bewaak(); } catch (e) { /* optioneel */ }
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Privé">
 
-  try {
-    if (window.Opslag && Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll();
-  } catch (e) {}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap">
 
-  const eilandEl = document.getElementById('eiland');
-  if (eilandEl) eilandEl.addEventListener('click', () => { try { Eiland.klik(); } catch (e) {} });
+    <link rel="stylesheet" href="css/stijl.css?v=6">
+</head>
+<body>
+    <div id="achtergrond" aria-hidden="true">
+        <div class="aurora a1"></div>
+        <div class="aurora a2"></div>
+        <div class="aurora a3"></div>
+        <div class="wolken"></div>
+        <canvas id="weer-canvas"></canvas>
+    </div>
 
-  // als er iets verandert, de juiste stukken opnieuw tekenen
-  try { Prive.luister('taken', () => Home.taken()); } catch (e) {}
-  try { Prive.luister('websites', () => Home.websites()); } catch (e) {}
-  try { Prive.luister('weer', () => { Home.wedstrijd(); Achtergrond.werkBij(); }); } catch (e) {}
-  try { Prive.luister('instellingen', () => { Home.teken(); Achtergrond.werkBij(); }); } catch (e) {}
-  try { Prive.luister('auth', () => {
-    if (Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll();
-    else Eiland.stopSpotifyPoll();
-  }); } catch (e) {}
+    <button id="eiland" type="button" aria-label="Dynamic Island">
+        <span class="eiland-links"></span>
+        <span class="eiland-midden"></span>
+        <span class="eiland-rechts"></span>
+    </button>
 
-  // klok, wedstrijd en weer — respecteer reduced motion voorkeur
-  const respectReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!respectReducedMotion) {
-    try { setInterval(() => Home.klok(), 10000); } catch (e) {}
-    try { setInterval(() => Home.wedstrijd(), 60000); } catch (e) {}
-    try { setInterval(() => { Home.weer(); Achtergrond.werkBij(); }, 15 * 60000); } catch (e) {}
-  }
+    <main id="bureaublad"></main>
+    <nav id="dock" aria-label="Apps"></nav>
+    <div id="venster-laag"></div>
+    <div id="siri-laag"></div>
 
-  // om middernacht moet het agenda-icoon de nieuwe datum krijgen
-  try { setInterval(() => Prive.bouwDock(), 60 * 60000); } catch (e) {}
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script src="js/opslag.js?v=6"></script>
+    <script src="js/auth.js?v=6"></script>
+    <script src="js/spotify.js?v=6"></script>
+    <script src="js/kern.js?v=6"></script>
+    <script src="js/bediening.js?v=6"></script>
+    <script src="js/weer.js?v=6"></script>
+    <script src="js/achtergrond.js?v=6"></script>
+    <script src="js/eiland.js?v=6"></script>
+    <script src="data/mijn-websites.js?v=6"></script>
 
-  // sneltoetsen: Esc sluit alles, Ctrl/Cmd + J opent Siri, pijlen in dock
-  addEventListener('keydown', e => {
-    try {
-      if (e.key === 'Escape') {
-        if (document.getElementById('siri-laag') && document.getElementById('siri-laag').classList.contains('actief')) Siri.sluit();
-        else Prive.sluit();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); Siri.start(); }
+    <script src="js/apps/home.js?v=6"></script>
+    <script src="js/apps/websites.js?v=6"></script>
+    <script src="js/apps/agenda.js?v=6"></script>
+    <script src="js/apps/planner.js?v=6"></script>
+    <script src="js/apps/browser.js?v=6"></script>
+    <script src="js/apps/siri.js?v=6"></script>
+    <script src="js/apps/instellingen.js?v=6"></script>
 
-      const focus = document.activeElement;
-      if (focus && focus.classList && focus.classList.contains('dock-app')) {
-        if (e.key === 'ArrowRight') { e.preventDefault(); focus.nextElementSibling?.focus(); }
-        if (e.key === 'ArrowLeft') { e.preventDefault(); focus.previousElementSibling?.focus(); }
-      }
-    } catch (err) { /* swallow */ }
-  });
-
-  // staat er een app in het adres (bv. #planner)? Dan die app meteen openen
-  if (location.hash.length > 1) {
-    try { Prive.start(location.hash.slice(1)); } catch (e) { console.warn('Prive.start faalde', e); }
-  }
-
-  // PWA: de service worker zorgt dat Privé als app werkt en ook offline opent
-  if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  }
-});
+    <script src="js/start.js?v=6"></script>
+</body>
+</html>

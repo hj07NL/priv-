@@ -1,31 +1,69 @@
-/* SERVICE WORKER: een script dat op de achtergrond draait en de bestanden van Privé bewaart.
-   Daardoor opent Privé ook zonder internet, en voelt het als een echte app.
-   Pas je iets aan en zie je het niet? Verhoog dan het versienummer hieronder, bv. naar 'privé-v5'. */
+/* START: dit bestand start alles op, nadat alle andere scripts geladen zijn. */
 
-const VERSIE = 'privé-v5';
-const BESTANDEN = [
-  './', 'index.html', 'manifest.webmanifest', 'css/stijl.css',
-  'js/opslag.js', 'js/auth.js', 'js/kern.js', 'js/weer.js', 'js/achtergrond.js', 'js/eiland.js', 'js/spotify.js', 'js/start.js',
-  'js/apps/home.js', 'js/apps/websites.js', 'js/apps/agenda.js', 'js/apps/planner.js',
-  'js/apps/browser.js', 'js/apps/siri.js', 'js/apps/instellingen.js', 'data/mijn-websites.js',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'
-];
+// Wacht met opstarten tot de DOM klaar is, anders kan #bureaublad ontbreken.
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // Bouw dock en tekenschermen pas nádat alle apps geregistreerd zijn
+    Prive.bouwDock();
+  } catch (e) { console.warn('Prive niet klaar voor bouwDock()', e); }
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSIE).then(c => c.addAll(BESTANDEN)));
-  self.skipWaiting();
-});
+  try { Home.teken(); } catch (e) { console.warn('Home.teken faalde:', e); }
+  try { Achtergrond.werkBij(); } catch (e) { /* optioneel */ }
+  try { Eiland.rust(); Eiland.bewaak(); } catch (e) { /* optioneel */ }
+  try { Bediening.init(); } catch (e) { /* optioneel */ }
 
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(namen => Promise.all(namen.filter(n => n !== VERSIE).map(n => caches.delete(n)))));
-  self.clients.claim();
-});
+  try {
+    if (window.Opslag && Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll();
+  } catch (e) {}
 
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
-  e.respondWith(
-    fetch(e.request)
-      .then(antwoord => { const kopie = antwoord.clone(); caches.open(VERSIE).then(c => c.put(e.request, kopie)); return antwoord; })
-      .catch(() => caches.match(e.request))
-  );
+  const eilandEl = document.getElementById('eiland');
+  if (eilandEl) eilandEl.addEventListener('click', () => { try { Eiland.klik(); } catch (e) {} });
+
+  // als er iets verandert, de juiste stukken opnieuw tekenen
+  try { Prive.luister('taken', () => Home.taken()); } catch (e) {}
+  try { Prive.luister('websites', () => Home.websites()); } catch (e) {}
+  try { Prive.luister('weer', () => { Home.wedstrijd(); Achtergrond.werkBij(); }); } catch (e) {}
+  try { Prive.luister('instellingen', () => { Home.teken(); Achtergrond.werkBij(); }); } catch (e) {}
+  try { Prive.luister('auth', () => {
+    if (Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll();
+    else Eiland.stopSpotifyPoll();
+  }); } catch (e) {}
+
+  // klok, wedstrijd en weer — respecteer reduced motion voorkeur
+  const respectReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!respectReducedMotion) {
+    try { setInterval(() => Home.klok(), 10000); } catch (e) {}
+    try { setInterval(() => Home.wedstrijd(), 60000); } catch (e) {}
+    try { setInterval(() => { Home.weer(); Achtergrond.werkBij(); }, 15 * 60000); } catch (e) {}
+  }
+
+  // om middernacht moet het agenda-icoon de nieuwe datum krijgen
+  try { setInterval(() => Prive.bouwDock(), 60 * 60000); } catch (e) {}
+
+  // sneltoetsen: Esc sluit alles, Ctrl/Cmd + J opent Siri, pijlen in dock
+  addEventListener('keydown', e => {
+    try {
+      if (e.key === 'Escape') {
+        if (document.getElementById('siri-laag') && document.getElementById('siri-laag').classList.contains('actief')) Siri.sluit();
+        else Prive.sluit();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); Siri.start(); }
+
+      const focus = document.activeElement;
+      if (focus && focus.classList && focus.classList.contains('dock-app')) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); focus.nextElementSibling?.focus(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); focus.previousElementSibling?.focus(); }
+      }
+    } catch (err) { /* swallow */ }
+  });
+
+  // staat er een app in het adres (bv. #planner)? Dan die app meteen openen
+  if (location.hash.length > 1) {
+    try { Prive.start(location.hash.slice(1)); } catch (e) { console.warn('Prive.start faalde', e); }
+  }
+
+  // PWA: de service worker zorgt dat Privé als app werkt en ook offline opent
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
 });
