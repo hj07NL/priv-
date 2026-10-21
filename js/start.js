@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap">
 
-    <link rel="stylesheet" href="css/stijl.css?v=6">
+    <link rel="stylesheet" href="css/stijl.css?v=7">
 </head>
 <body>
     <div id="achtergrond" aria-hidden="true">
@@ -43,24 +43,24 @@
     <div id="siri-laag"></div>
 
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    <script src="js/opslag.js?v=6"></script>
-    <script src="js/auth.js?v=6"></script>
-    <script src="js/spotify.js?v=6"></script>
-    <script src="js/kern.js?v=6"></script>
-    <script src="js/bediening.js?v=6"></script>
-    <script src="js/weer.js?v=6"></script>
-    <script src="js/achtergrond.js?v=6"></script>
-    <script src="js/eiland.js?v=6"></script>
-    <script src="data/mijn-websites.js?v=6"></script>
+    <script src="js/opslag.js?v=7"></script>
+    <script src="js/auth.js?v=7"></script>
+    <script src="js/spotify.js?v=7"></script>
+    <script src="js/kern.js?v=7"></script>
+    <script src="js/bediening.js?v=7"></script>
+    <script src="js/weer.js?v=7"></script>
+    <script src="js/achtergrond.js?v=7"></script>
+    <script src="js/eiland.js?v=7"></script>
+    <script src="data/mijn-websites.js?v=7"></script>
 
-    <script src="js/apps/home.js?v=6"></script>
-    <script src="js/apps/websites.js?v=6"></script>
-    <script src="js/apps/agenda.js?v=6"></script>
-    <script src="js/apps/planner.js?v=6"></script>
-    <script src="js/apps/browser.js?v=6"></script>
-    <script src="js/apps/siri.js?v=6"></script>
-    <script src="js/apps/instellingen.js?v=6"></script>
+    <script src="js/apps/home.js?v=7"></script>
+    <script src="js/apps/websites.js?v=7"></script>
+    <script src="js/apps/agenda.js?v=7"></script>
+    <script src="js/apps/planner.js?v=7"></script>
+    <script src="js/apps/browser.js?v=7"></script>
+    <script src="js/apps/siri.js?v=7"></script>
+    <script src="js/apps/instellingen.js?v=7"></script>
 
-    <script src="js/start.js?v=6"></script>
+    <script src="js/start.js?v=7"></script>
 </body>
 </html>
