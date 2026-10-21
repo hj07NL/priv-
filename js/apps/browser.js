@@ -1,177 +1,170 @@
-/* BROWSER: een browser in je browser, met tabbladen en een adresbalk.
-   Hoe het werkt: elke website wordt geladen in een <iframe> (een venster in je pagina).
+/* HOME: de widgets op het beginscherm. */
+const Home = {
+  teken() {
+    const b = document.getElementById('bureaublad');
+    if (!b) return;
 
-   EERLIJK: veel grote websites (Google, TikTok, Instagram, YouTube zelf) blokkeren dat met een
-   beveiliging die X-Frame-Options heet. Dan blijft het tabblad wit. Daarom:
-   - bekende sites die blokkeren openen meteen in een echt nieuw tabblad
-   - YouTube- en TikTok-videolinks worden automatisch omgezet naar hun "embed"-versie, die WEL werkt
-   - bovenin staat altijd een knop om de site in een echt tabblad te openen */
+    const naam = (typeof instellingen === 'function' ? instellingen().naam : (window.Prive && Prive.naam) || 'Jij');
 
-const GEBLOKKEERD = ['google.', 'tiktok.com', 'youtube.com', 'instagram.com', 'facebook.com', 'x.com', 'twitter.com',
-  'github.com', 'netflix.com', 'reddit.com', 'linkedin.com', 'snapchat.com', 'whatsapp.com', 'spotify.com', 'apple.com',
-  'bol.com', 'magister.net', 'somtoday.nl', 'chatgpt.com', 'claude.ai', 'discord.com', 'twitch.tv'];
+    b.innerHTML = `
+      <section class="widget glas klok-widget" data-app="planner">
+        <div>
+          <p class="groet">Goedendag, ${veilig(naam)}</p>
+          <p class="klok-tijd">--:--</p>
+          <p class="klok-datum"></p>
+        </div>
+      </section>
 
-const FAVORIETEN = [
-  { naam: 'Mijn schoolsite', url: 'https://hj07nl.github.io', kleur: '#0b2545' },
-  { naam: 'Wikipedia', url: 'https://nl.m.wikipedia.org', kleur: '#636366' },
-  { naam: 'TikTok', url: 'https://www.tiktok.com', kleur: '#000000' },
-  { naam: 'YouTube', url: 'https://www.youtube.com', kleur: '#FF0000' },
-  { naam: 'Google', url: 'https://www.google.com', kleur: '#4285F4' },
-  { naam: 'Open-Meteo', url: 'https://open-meteo.com', kleur: '#0A84FF' }
-];
+      <section class="widget glas weer-widget" data-app="instellingen">
+        <div class="widget-kop-row">
+          <h2 class="widget-kop">Weer</h2>
+          <span class="widget-chip">Live</span>
+        </div>
+        <p class="widget-sub">Loading…</p>
+      </section>
 
-const Browser = {
-  tabs: [],            // { id, url, geschiedenis: [], plek }
-  actief: null,
+      <section class="widget glas taken-widget" data-app="planner">
+        <div class="widget-kop-row">
+          <h2 class="widget-kop">Vandaag</h2>
+          <span class="widget-chip">Taak</span>
+        </div>
+        <p class="widget-sub">Taken laden…</p>
+      </section>
 
-  nieuwTab(url) {
-    const tab = { id: Math.random().toString(36).slice(2), url: '', geschiedenis: [], plek: -1 };
-    this.tabs.push(tab);
-    this.actief = tab.id;
-    if (url) this.ga(url, tab); else this.tekenAlles();
-  },
+      <section class="widget glas wedstrijd-widget" data-app="instellingen">
+        <div class="widget-kop-row">
+          <h2 class="widget-kop">Wedstrijd</h2>
+          <span class="widget-chip">Sport</span>
+        </div>
+        <p class="widget-sub">Geen wedstrijd ingesteld</p>
+      </section>
 
-  tab() { return this.tabs.find(t => t.id === this.actief); },
+      <section class="widget glas websites-widget" data-app="websites">
+        <div class="widget-kop-row">
+          <h2 class="widget-kop">Websites</h2>
+          <span class="widget-chip">Favorieten</span>
+        </div>
+        <p class="widget-sub">Geen websites gevonden</p>
+      </section>
+    `;
 
-  /* van wat je typt een echte link maken */
-  maakUrl(tekst) {
-    tekst = tekst.trim();
-    if (!tekst) return null;
-    const lijktOpSite = /^[^\s]+\.[a-z]{2,}(\/.*)?$/i.test(tekst) || /^https?:\/\//i.test(tekst);
-    if (!lijktOpSite) return { zoek: tekst };                       // geen website? dan is het een zoekvraag
-    let url = /^https?:\/\//i.test(tekst) ? tekst : 'https://' + tekst;
-
-    // video-links omzetten naar de versie die in een iframe mag
-    const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]{11})/);
-    if (yt) url = 'https://www.youtube.com/embed/' + yt[1];
-    const tt = url.match(/tiktok\.com\/.*video\/(\d+)/);
-    if (tt) url = 'https://www.tiktok.com/embed/v2/' + tt[1];
-    return { url };
-  },
-
-  isGeblokkeerd(url) {
-    if (/youtube\.com\/embed|tiktok\.com\/embed/.test(url)) return false;
-    try {
-      const host = new URL(url).hostname;
-      return GEBLOKKEERD.some(g => host.includes(g));
-    } catch (e) { return false; }
-  },
-
-  /* naar een website gaan in een tabblad */
-  ga(tekst, tab = this.tab()) {
-    const r = this.maakUrl(tekst);
-    if (!r) return;
-    if (r.zoek) {                                                   // zoeken gaat via Google in een echt tabblad
-      window.open('https://www.google.com/search?q=' + encodeURIComponent(r.zoek), '_blank', 'noopener');
-      return;
-    }
-    tab.geschiedenis = tab.geschiedenis.slice(0, tab.plek + 1);     // vooruit-geschiedenis weggooien
-    tab.geschiedenis.push(r.url);
-    tab.plek = tab.geschiedenis.length - 1;
-    tab.url = r.url;
-    this.tekenAlles();
-  },
-
-  terug() { const t = this.tab(); if (t && t.plek > 0) { t.plek--; t.url = t.geschiedenis[t.plek]; this.tekenAlles(); } },
-  vooruit() { const t = this.tab(); if (t && t.plek < t.geschiedenis.length - 1) { t.plek++; t.url = t.geschiedenis[t.plek]; this.tekenAlles(); } },
-
-  sluitTab(id) {
-    this.tabs = this.tabs.filter(t => t.id !== id);
-    if (!this.tabs.length) return this.nieuwTab();
-    if (this.actief === id) this.actief = this.tabs[this.tabs.length - 1].id;
-    this.tekenAlles();
-  },
-
-  /* ---------- het scherm ---------- */
-  body: null,
-
-  maak(body, opties) {
-    this.body = body;
-    body.classList.add('browser-body');
-    body.innerHTML = `
-      <div class="tab-balk"></div>
-      <form class="adres-balk">
-        <button type="button" class="ronde-knop" data-a="terug" aria-label="Terug">‹</button>
-        <button type="button" class="ronde-knop" data-a="vooruit" aria-label="Vooruit">›</button>
-        <input name="adres" placeholder="Zoek of typ een website" autocomplete="off" spellcheck="false">
-        <button type="button" class="ronde-knop" data-a="herlaad" aria-label="Herladen">↻</button>
-        <button type="button" class="ronde-knop" data-a="extern" aria-label="Open in nieuw tabblad" title="Open in echt tabblad">↗</button>
-      </form>
-      <div class="pagina-vak"></div>`;
-
-    body.querySelector('form').addEventListener('submit', e => { e.preventDefault(); this.ga(e.target.adres.value); });
-    body.querySelector('[data-a="terug"]').addEventListener('click', () => this.terug());
-    body.querySelector('[data-a="vooruit"]').addEventListener('click', () => this.vooruit());
-    body.querySelector('[data-a="herlaad"]').addEventListener('click', () => this.tekenAlles(true));
-    body.querySelector('[data-a="extern"]').addEventListener('click', () => { const t = this.tab(); if (t && t.url) window.open(t.url, '_blank', 'noopener'); });
-
-    if (opties && opties.url) this.nieuwTab(opties.url);     // geopend met een link? dan in een nieuw tabblad
-    else if (!this.tabs.length) this.nieuwTab();
-    else this.tekenAlles();
-  },
-
-  tekenAlles(herlaad) {
-    const body = this.body;
-    if (!body || !body.isConnected) return;
-    const tab = this.tab();
-
-    // tabbladen
-    body.querySelector('.tab-balk').innerHTML = this.tabs.map(t => `
-      <div class="tab ${t.id === this.actief ? 'aan' : ''}" data-id="${t.id}">
-        <span>${t.url ? veilig(Websites.naamVan(t.url)) : 'Startpagina'}</span>
-        <button type="button" class="tab-sluit" aria-label="Tab sluiten">✕</button>
-      </div>`).join('') + '<button type="button" class="tab-plus" aria-label="Nieuw tabblad">+</button>';
-    body.querySelectorAll('.tab').forEach(t => t.addEventListener('click', e => {
-      if (e.target.closest('.tab-sluit')) return this.sluitTab(t.dataset.id);
-      this.actief = t.dataset.id; this.tekenAlles();
+    b.querySelectorAll('.widget').forEach(w => w.addEventListener('click', e => {
+      if (e.target.closest('a, button')) return;
+      const app = w.dataset.app;
+      if (app && Prive && Prive.start) Prive.start(app);
     }));
-    body.querySelector('.tab-plus').addEventListener('click', () => this.nieuwTab());
 
-    body.querySelector('[name="adres"]').value = tab && tab.url ? tab.url : '';
-    const vak = body.querySelector('.pagina-vak');
+    try { this.klok(); } catch (e) {}
+    try { this.websites(); } catch (e) {}
+    try { this.taken(); } catch (e) {}
+    try { this.wedstrijd(); } catch (e) {}
+    try { this.weer(); } catch (e) {}
+  },
 
-    // startpagina met favorieten
-    if (!tab || !tab.url) {
-      vak.innerHTML = `
-        <div class="startpagina">
-          <h3>Favorieten</h3>
-          <div class="favorieten">${FAVORIETEN.map(f => `
-            <button type="button" class="favoriet" data-url="${f.url}">
-              <span class="fav-letter" style="background:${f.kleur}">${f.naam[0]}</span>${veilig(f.naam)}
-            </button>`).join('')}
+  klok() {
+    const el = document.querySelector('.klok-tijd');
+    const elDatum = document.querySelector('.klok-datum');
+    if (!el) return;
+    const nu = new Date();
+    el.textContent = String(nu.getHours()).padStart(2, '0') + ':' + String(nu.getMinutes()).padStart(2, '0');
+    elDatum.textContent = DAGEN[nu.getDay()] + ' ' + nu.getDate() + ' ' + MAANDEN[nu.getMonth()];
+  },
+
+  taken() {
+    const w = document.querySelector('.taken-widget');
+    if (!w) return;
+    try {
+      if (window.Planner && Planner.taken) {
+        const lijst = (Planner.gesorteerd && Planner.gesorteerd(Planner.taken())) || Planner.taken();
+        if (!lijst || lijst.length === 0) {
+          w.innerHTML = `
+            <div class="widget-kop-row"><h2 class="widget-kop">Vandaag</h2><span class="widget-chip">Taak</span></div>
+            <p class="widget-sub">Niks meer te doen vandaag.</p>`;
+          return;
+        }
+
+        const eerste = lijst.slice(0, 3).map(t => `<li>${veilig(t.titel)}</li>`).join('');
+        w.innerHTML = `
+          <div class="widget-kop-row">
+            <h2 class="widget-kop">Vandaag</h2>
+            <span class="widget-chip">${lijst.length}</span>
           </div>
-          <p class="klein">Tip: plak een YouTube- of TikTok-videolink in de adresbalk, die wordt hier gewoon afgespeeld.</p>
-        </div>`;
-      vak.querySelectorAll('.favoriet').forEach(f => f.addEventListener('click', () => this.ga(f.dataset.url)));
-      return;
+          <ul class="widget-list">${eerste}</ul>`;
+      } else {
+        w.querySelector('.widget-sub').textContent = 'Planner niet beschikbaar.';
+      }
+    } catch (e) {
+      w.querySelector('.widget-sub').textContent = 'Fout bij laden taken.';
     }
+  },
 
-    // bekende site die zich niet laat insluiten
-    if (this.isGeblokkeerd(tab.url)) {
-      vak.innerHTML = `
-        <div class="geblokkeerd">
-          <p class="groot-icoon">↗</p>
-          <h3>${veilig(Websites.naamVan(tab.url))} laat zich niet openen in een andere website</h3>
-          <p>Die site blokkeert dat voor de veiligheid. Open hem in een echt tabblad.</p>
-          <a class="knop blauw" href="${veilig(tab.url)}" target="_blank" rel="noopener">Open ${veilig(Websites.naamVan(tab.url))}</a>
-        </div>`;
-      return;
+  websites() {
+    const w = document.querySelector('.websites-widget');
+    if (!w) return;
+    try {
+      if (window.Websites && Websites.lijst) {
+        const lijst = Websites.lijst() || [];
+        const top = lijst[0] ? veilig(lijst[0].naam || '?') : 'Geen';
+        w.innerHTML = `
+          <div class="widget-kop-row"><h2 class="widget-kop">Websites</h2><span class="widget-chip">${lijst.length}</span></div>
+          <p class="groot-getal">${lijst.length}</p>
+          <p class="widget-sub">${lijst.length ? 'Top: ' + top : 'Nog geen websites opgeslagen.'}</p>`;
+      } else {
+        w.querySelector('.widget-sub').textContent = 'Websites module niet geladen.';
+      }
+    } catch (e) {
+      w.querySelector('.widget-sub').textContent = 'Fout bij laden websites.';
     }
+  },
 
-    const bestaand = vak.querySelector('iframe');
-    if (!herlaad && bestaand && bestaand.dataset.url === tab.url) return;
-    vak.innerHTML = `
-      <iframe src="${veilig(tab.url)}" data-url="${veilig(tab.url)}" title="Website"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
-              allow="fullscreen; encrypted-media; autoplay"></iframe>
-      <p class="iframe-hint">Blijft het wit? Dan blokkeert deze site het. Klik op ↗ om hem in een echt tabblad te openen.</p>`;
+  wedstrijd() {
+    const w = document.querySelector('.wedstrijd-widget');
+    if (!w) return;
+    try {
+      const s = typeof instellingen === 'function' ? instellingen() : {};
+      const m = s.wedstrijd || {};
+      if (!m || !m.datum) {
+        w.querySelector('.widget-sub').textContent = 'Geen wedstrijd ingesteld';
+        return;
+      }
+
+      const dag = m.datum === vandaag() ? 'Matchday' : 'Volgende wedstrijd';
+      const tijd = m.tijd ? ' · ' + m.tijd : '';
+      w.innerHTML = `
+        <div class="widget-kop-row"><h2 class="widget-kop">${dag}</h2><span class="widget-chip">Hockey</span></div>
+        <p class="groot-getal">${mooieDatum(m.datum)}</p>
+        <p class="widget-sub">${veilig(m.tegenstander || 'Wedstrijd')} ${tijd}</p>`;
+    } catch (e) {
+      w.querySelector('.widget-sub').textContent = 'Fout bij laden wedstrijd.';
+    }
+  },
+
+  async weer() {
+    const w = document.querySelector('.weer-widget');
+    if (!w) return;
+    try {
+      if (!window.Weer || !Weer.haal) {
+        w.querySelector('.widget-sub').textContent = 'Weer module niet geladen.';
+        return;
+      }
+      const d = await Weer.haal();
+      if (!d || !d.current) {
+        w.querySelector('.widget-sub').textContent = 'Geen verbinding.';
+        return;
+      }
+      const b = Weer.beschrijf(d.current.weather_code);
+      w.innerHTML = `
+        <div class="widget-kop-row"><h2 class="widget-kop">Weer</h2><span class="widget-chip">${b}</span></div>
+        <div class="widget-metriek">
+          <span class="groot-getal">${Math.round(d.current.temperature_2m)}°</span>
+        </div>
+        <p class="widget-sub">${b} · ${Math.round(d.current.wind_speed_10m)} km/u</p>`;
+    } catch (e) {
+      w.querySelector('.widget-sub').textContent = 'Fout bij ophalen weer.';
+    }
   }
 };
 
-privé.registreer({
-  id: 'browser',
-  naam: 'Browser',
-  kleur: 'linear-gradient(160deg, #64D2FF, #0A84FF)',
-  icoon: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.6"/><path d="M15.8 8.2l-2.4 5.2-5.2 2.4 2.4-5.2z" fill="#fff"/><path d="M15.8 8.2l-5.2 2.4 2.8 2.8z" fill="#FF453A"/></svg>',
-  maak(body, opties) { Browser.maak(body, opties); }
-});
+if (Prive && Prive.registreer) {
+  Prive.registreer({ id: 'home', naam: 'Home', inDock: false, start() { Prive.sluit(); } });
+}

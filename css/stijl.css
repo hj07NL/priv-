@@ -1,18 +1,66 @@
-/* Extra UI fixes: inputs, buttons en instellingen layout */
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <title>Privé</title>
 
-/* BODY padding zodat de inhoud niet achter het dock valt */
-body { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#05070f">
+    <meta name="description" content="Privé, mijn eigen besturingssysteem in de browser.">
 
-/* Instellingen: groep- en rij-styling */
-.inst-groep { margin-bottom: 18px; }
-.inst-groep h3 { margin: 0 0 10px 0; font-size: 1.1rem; }
-.inst-rij { display: flex; gap: 10px; align-items: center; margin: 8px 0; }
-.inst-rij input[type="text"], .inst-rij input[type="date"], .inst-rij input[type="time"], .inst-rij input[type="email"], .inst-rij input:not([type="checkbox"]) {
-  padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.25); color: var(--tekst);
-}
-.knop { background: linear-gradient(135deg, var(--accent-oranje-a), var(--accent-oranje-b)); color: #08101b; padding: 8px 12px; border-radius: 8px; border:none; cursor:pointer; }
-.inst-tekst { color: var(--zacht); }
-.inst-melding { color: var(--accent-oranje-a); margin: 6px 0 12px 0; }
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Privé">
 
-/* schakelaar style (eenvoudig) */
-.schakelaar { width: 20px; height: 20px; }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap">
+
+    <link rel="stylesheet" href="css/stijl.css?v=9">
+</head>
+<body>
+    <div id="achtergrond" aria-hidden="true">
+        <div class="aurora a1"></div>
+        <div class="aurora a2"></div>
+        <div class="aurora a3"></div>
+        <div class="wolken"></div>
+        <canvas id="weer-canvas"></canvas>
+    </div>
+
+    <button id="eiland" type="button" aria-label="Dynamic Island">
+        <span class="eiland-links"></span>
+        <span class="eiland-midden"></span>
+        <span class="eiland-rechts"></span>
+    </button>
+
+    <main id="bureaublad"></main>
+    <nav id="dock" aria-label="Apps"></nav>
+    <div id="venster-laag"></div>
+    <div id="siri-laag"></div>
+
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script src="js/opslag.js?v=9"></script>
+    <script src="js/auth.js?v=9"></script>
+    <script src="js/spotify.js?v=9"></script>
+    <script src="js/kern.js?v=9"></script>
+    <script src="js/bediening.js?v=9"></script>
+    <script src="js/weer.js?v=9"></script>
+    <script src="js/achtergrond.js?v=9"></script>
+    <script src="js/eiland.js?v=9"></script>
+    <script src="data/mijn-websites.js?v=9"></script>
+
+    <script src="js/apps/home.js?v=9"></script>
+    <script src="js/apps/websites.js?v=9"></script>
+    <script src="js/apps/agenda.js?v=9"></script>
+    <script src="js/apps/planner.js?v=9"></script>
+    <script src="js/apps/browser.js?v=9"></script>
+    <script src="js/apps/siri.js?v=9"></script>
+    <script src="js/apps/instellingen.js?v=9"></script>
+
+    <script src="js/start.js?v=9"></script>
+</body>
+</html>

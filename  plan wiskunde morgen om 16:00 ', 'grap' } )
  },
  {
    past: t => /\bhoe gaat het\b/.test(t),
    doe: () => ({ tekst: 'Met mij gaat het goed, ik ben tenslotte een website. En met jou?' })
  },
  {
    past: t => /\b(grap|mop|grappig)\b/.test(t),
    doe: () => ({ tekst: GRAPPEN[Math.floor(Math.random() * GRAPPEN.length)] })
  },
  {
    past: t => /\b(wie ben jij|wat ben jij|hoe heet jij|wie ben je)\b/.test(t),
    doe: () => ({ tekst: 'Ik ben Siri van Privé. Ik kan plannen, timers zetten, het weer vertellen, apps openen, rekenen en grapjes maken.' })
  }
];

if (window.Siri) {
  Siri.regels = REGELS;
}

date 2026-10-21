@@ -1,0 +1,117 @@
+/* SIRI: een persoonlijke voice assistant in Privé. */
+
+const APP_NAMEN = {
+  planner: 'planner',
+  taken: 'planner',
+  agenda: 'agenda',
+  kalender: 'agenda',
+  browser: 'browser',
+  internet: 'browser',
+  websites: 'websites',
+  tiktok: 'websites',
+  instellingen: 'instellingen',
+  settings: 'instellingen',
+  home: 'home',
+  beginscherm: 'home',
+  siri: 'siri'
+};
+
+const REGELS = [
+  {
+    past: t => /^(hoi|hallo|hey|hé|he|yo|goedemorgen|goedemiddag|goedenavond)\b/.test(t) && t.split(' ').length <= 3,
+    doe: () => ({ tekst: 'Hoi ' + instellingen().naam + '! Wat kan ik voor je doen?' })
+  },
+  {
+    past: t => /\b(dank|bedankt|thanks|top)\b/.test(t),
+    doe: () => ({ tekst: 'Graag gedaan!' })
+  },
+  {
+    past: t => /\bhoe laat\b/.test(t),
+    doe: () => { const n = new Date(); return { tekst: 'Het is ' + n.getHours() + ':' + String(n.getMinutes()).padStart(2, '0') + '.' }; }
+  },
+  {
+    past: t => /\b(welke|wat voor) (dag|datum)\b|\bwelke datum\b|\bwat is (het|de datum) vandaag\b/.test(t),
+    doe: () => { const n = new Date(); return { tekst: 'Het is ' + DAGEN[n.getDay()] + ' ' + n.getDate() + ' ' + MAANDEN[n.getMonth()] + '.' }; }
+  },
+  {
+    past: t => /\bstop\b.*\btimer\b|\btimer\b.*\b(stop|uit)\b/.test(t),
+    doe: () => { if (!Eiland.timerEinde) return { tekst: 'Er loopt geen timer.' }; Eiland.stopTimer(); return { tekst: 'Timer gestopt.' }; }
+  },
+  {
+    past: t => /\b(timer|wekker|kookwekker|aftellen)\b/.test(t),
+    doe: t => {
+      const sec = duurVan(t);
+      if (!sec) return { tekst: 'Ik begrijp niet hoe lang de timer moet duren.' };
+      Eiland.startTimer(sec);
+      return { tekst: 'Timer gezet voor ' + duurTekst(sec) + '.' };
+    }
+  },
+  {
+    past: t => /^(plan|zet|herinner|maak (een )?(taak|herinnering)|nieuwe taak|taak|voeg)\b/.test(t),
+    doe: t => {
+      const taak = leesTaak(t);
+      if (!taak) return { tekst: 'Ik begrijp je taak niet helemaal. Probeer: plan wiskunde morgen om 16:00.' };
+      Planner.voegToe(taak);
+      return {
+        tekst: 'Taak toegevoegd: ' + taak.titel + '.',
+        knop: { tekst: 'Ook in Google Agenda', doe: () => window.open(googleAgendaLink(taak.titel, taak.datum, taak.tijd), '_blank', 'noopener') }
+      };
+    }
+  },
+  {
+    past: t => /\b(weer|regen|regent|temperatuur|graden|warm|koud|paraplu|zon|sneeuw)\b/.test(t),
+    doe: async t => {
+      if (instellingen().lat === null) return { tekst: 'Ik weet nog niet waar je bent. Stel je plaats in bij Instellingen.', knop: { tekst: 'Open Instellingen', doe: () => { Siri.sluit(); Prive.start('instellingen'); } } };
+      const data = await Weer.haal();
+      if (!data || !data.current) return { tekst: 'Ik kan het weer nu niet ophalen.' };
+      return { tekst: 'Het is nu ' + Math.round(data.current.temperature_2m) + ' graden. De lucht voelt ' + Weer.beschrijf(data.current.weather_code).toLowerCase() + '.' };
+    }
+  },
+  {
+    past: t => /\b(wedstrijd|hockey)\b/.test(t),
+    doe: () => {
+      const s = instellingen();
+      if (!s.wedstrijd || !s.wedstrijd.datum) return { tekst: 'Je hebt nog geen wedstrijd ingesteld.' };
+      return { tekst: 'Je volgende wedstrijd is tegen ' + (s.wedstrijd.tegenstander || 'een tegenstander') + ' op ' + mooieDatum(s.wedstrijd.datum) + '.' };
+    }
+  },
+  {
+    past: t => /\b(wat|welke)\b.*\b(moet ik|heb ik|staat er|taken|planning|huiswerk)\b/.test(t),
+    doe: () => {
+      const taken = Planner.taken ? Planner.taken() : [];
+      if (!taken.length) return { tekst: 'Je hebt vandaag nog niks gepland.' };
+      return { tekst: 'Je hebt ' + taken.length + ' dingen op je planning, waaronder ' + taken[0].titel + '.' };
+    }
+  },
+  {
+    past: t => /\b(open|start|ga naar|laat .* zien)\b/.test(t) && Object.keys(APP_NAMEN).some(n => t.includes(n)),
+    doe: t => {
+      const appNaam = Object.keys(APP_NAMEN).find(n => t.toLowerCase().includes(n));
+      const app = APP_NAMEN[appNaam];
+      if (!app) return { tekst: 'Welke app wil je openen?' };
+      Siri.sluit();
+      Prive.start(app);
+      return { tekst: 'Ik open ' + app + '.' };
+    }
+  },
+  {
+    past: t => /\b(naam|wie ben ik|wat is mijn naam)\b/.test(t),
+    doe: () => ({ tekst: 'Je naam is ' + instellingen().naam + '.' })
+  },
+  {
+    past: t => /\b(plaats|waar woon ik|wat is mijn plaats)\b/.test(t),
+    doe: () => ({ tekst: instellingen().plaats ? 'Je plaats is ' + instellingen().plaats + '.' : 'Ik weet nog niet waar je woont. Zet dat in Instellingen.' })
+  },
+  {
+    past: t => /\b(zoek|google)\b/.test(t),
+    doe: t => {
+      const vraag = t.replace(/^(zoek|google)( op| naar)?\s*/, '');
+      const url = 'https://www.google.com/search?q=' + encodeURIComponent(vraag);
+      Siri.sluit();
+      Prive.start('browser', { url });
+      return { tekst: 'Ik open Google voor: ' + vraag };
+    }
+  },
+  {
+    past: t => /\b(wat kun je|wat kan je|help)\b/.test(t),
+    doe: () => ({ tekst: 'Ik kan je helpen met plannen, timers, weer, apps openen, de browser en kleine vraagjes. Probeer: 
