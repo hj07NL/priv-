@@ -1,66 +1,77 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <title>Privé</title>
+/* BEDIENING: rechtsboven een snelmenu met snelle acties en app-openers. */
+const Bediening = {
+  init() {
+    if (document.getElementById('bediening-knop')) return;
 
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#05070f">
-    <meta name="description" content="Privé, mijn eigen besturingssysteem in de browser.">
+    const knop = document.createElement('button');
+    knop.id = 'bediening-knop';
+    knop.type = 'button';
+    knop.className = 'bediening-knop';
+    knop.setAttribute('aria-label', 'Open bediening');
+    knop.textContent = '⋯';
 
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" href="icons/icon-192.png">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Privé">
+    const paneel = document.createElement('div');
+    paneel.id = 'bediening-paneel';
+    paneel.className = 'bediening-paneel glas';
+    paneel.innerHTML = `
+      <div class="bediening-kop">Privé</div>
+      <button class="bediening-item" type="button" data-bediening="home">Home</button>
+      <button class="bediening-item" type="button" data-bediening="planner">Planner</button>
+      <button class="bediening-item" type="button" data-bediening="websites">Websites</button>
+      <button class="bediening-item" type="button" data-bediening="instellingen">Instellingen</button>
+      <button class="bediening-item" type="button" data-bediening="siri">Siri</button>
+    `;
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap">
+    document.body.appendChild(knop);
+    document.body.appendChild(paneel);
 
-    <link rel="stylesheet" href="css/stijl.css?v=7">
-</head>
-<body>
-    <div id="achtergrond" aria-hidden="true">
-        <div class="aurora a1"></div>
-        <div class="aurora a2"></div>
-        <div class="aurora a3"></div>
-        <div class="wolken"></div>
-        <canvas id="weer-canvas"></canvas>
-    </div>
+    knop.addEventListener('click', e => {
+      e.stopPropagation();
+      this.toggle();
+    });
 
-    <button id="eiland" type="button" aria-label="Dynamic Island">
-        <span class="eiland-links"></span>
-        <span class="eiland-midden"></span>
-        <span class="eiland-rechts"></span>
-    </button>
+    paneel.querySelectorAll('[data-bediening]').forEach(button => {
+      button.addEventListener('click', () => {
+        const app = button.dataset.bediening;
+        this.sluit();
+        if (app === 'siri' && window.Siri && typeof Siri.start === 'function') {
+          Siri.start();
+          return;
+        }
+        if (window.Prive && typeof Prive.start === 'function') {
+          Prive.start(app);
+        }
+      });
+    });
 
-    <main id="bureaublad"></main>
-    <nav id="dock" aria-label="Apps"></nav>
-    <div id="venster-laag"></div>
-    <div id="siri-laag"></div>
+    document.addEventListener('click', e => {
+      if (!paneel.contains(e.target) && e.target !== knop) {
+        this.sluit();
+      }
+    });
 
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    <script src="js/opslag.js?v=7"></script>
-    <script src="js/auth.js?v=7"></script>
-    <script src="js/spotify.js?v=7"></script>
-    <script src="js/kern.js?v=7"></script>
-    <script src="js/bediening.js?v=7"></script>
-    <script src="js/weer.js?v=7"></script>
-    <script src="js/achtergrond.js?v=7"></script>
-    <script src="js/eiland.js?v=7"></script>
-    <script src="data/mijn-websites.js?v=7"></script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') this.sluit();
+    });
+  },
 
-    <script src="js/apps/home.js?v=7"></script>
-    <script src="js/apps/websites.js?v=7"></script>
-    <script src="js/apps/agenda.js?v=7"></script>
-    <script src="js/apps/planner.js?v=7"></script>
-    <script src="js/apps/browser.js?v=7"></script>
-    <script src="js/apps/siri.js?v=7"></script>
-    <script src="js/apps/instellingen.js?v=7"></script>
+  toggle() {
+    const paneel = document.getElementById('bediening-paneel');
+    if (!paneel) return;
+    paneel.classList.toggle('actief');
+  },
 
-    <script src="js/start.js?v=7"></script>
-</body>
-</html>
+  open() {
+    const paneel = document.getElementById('bediening-paneel');
+    if (!paneel) return;
+    paneel.classList.add('actief');
+  },
+
+  sluit() {
+    const paneel = document.getElementById('bediening-paneel');
+    if (!paneel) return;
+    paneel.classList.remove('actief');
+  }
+};
+
+window.Bediening = Bediening;

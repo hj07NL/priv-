@@ -1,31 +1,66 @@
-/* SERVICE WORKER: een script dat op de achtergrond draait en de bestanden van Privé bewaart.
-   Daardoor opent Privé ook zonder internet, en voelt het als een echte app.
-   Pas je iets aan en zie je het niet? Verhoog dan het versienummer hieronder, bv. naar 'privé-v6'. */
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <title>Privé</title>
 
-const VERSIE = 'privé-v6';
-const BESTANDEN = [
-  './', 'index.html', 'manifest.webmanifest', 'css/stijl.css',
-  'js/opslag.js', 'js/auth.js', 'js/kern.js', 'js/bediening.js', 'js/weer.js', 'js/achtergrond.js', 'js/eiland.js', 'js/spotify.js', 'js/start.js',
-  'js/apps/home.js', 'js/apps/websites.js', 'js/apps/agenda.js', 'js/apps/planner.js',
-  'js/apps/browser.js', 'js/apps/siri.js', 'js/apps/instellingen.js', 'data/mijn-websites.js',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'
-];
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#05070f">
+    <meta name="description" content="Privé, mijn eigen besturingssysteem in de browser.">
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSIE).then(c => c.addAll(BESTANDEN)));
-  self.skipWaiting();
-});
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Privé">
 
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(namen => Promise.all(namen.filter(n => n !== VERSIE).map(n => caches.delete(n)))));
-  self.clients.claim();
-});
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap">
 
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
-  e.respondWith(
-    fetch(e.request)
-      .then(antwoord => { const kopie = antwoord.clone(); caches.open(VERSIE).then(c => c.put(e.request, kopie)); return antwoord; })
-      .catch(() => caches.match(e.request))
-  );
-});
+    <link rel="stylesheet" href="css/stijl.css?v=8">
+</head>
+<body>
+    <div id="achtergrond" aria-hidden="true">
+        <div class="aurora a1"></div>
+        <div class="aurora a2"></div>
+        <div class="aurora a3"></div>
+        <div class="wolken"></div>
+        <canvas id="weer-canvas"></canvas>
+    </div>
+
+    <button id="eiland" type="button" aria-label="Dynamic Island">
+        <span class="eiland-links"></span>
+        <span class="eiland-midden"></span>
+        <span class="eiland-rechts"></span>
+    </button>
+
+    <main id="bureaublad"></main>
+    <nav id="dock" aria-label="Apps"></nav>
+    <div id="venster-laag"></div>
+    <div id="siri-laag"></div>
+
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script src="js/opslag.js?v=8"></script>
+    <script src="js/auth.js?v=8"></script>
+    <script src="js/spotify.js?v=8"></script>
+    <script src="js/kern.js?v=8"></script>
+    <script src="js/bediening.js?v=8"></script>
+    <script src="js/weer.js?v=8"></script>
+    <script src="js/achtergrond.js?v=8"></script>
+    <script src="js/eiland.js?v=8"></script>
+    <script src="data/mijn-websites.js?v=8"></script>
+
+    <script src="js/apps/home.js?v=8"></script>
+    <script src="js/apps/websites.js?v=8"></script>
+    <script src="js/apps/agenda.js?v=8"></script>
+    <script src="js/apps/planner.js?v=8"></script>
+    <script src="js/apps/browser.js?v=8"></script>
+    <script src="js/apps/siri.js?v=8"></script>
+    <script src="js/apps/instellingen.js?v=8"></script>
+
+    <script src="js/start.js?v=8"></script>
+</body>
+</html>

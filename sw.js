@@ -1,77 +1,61 @@
-/* BEDIENING: rechtsboven een snelmenu met snelle acties en app-openers. */
-const Bediening = {
-  init() {
-    if (document.getElementById('bediening-knop')) return;
+/* START: dit bestand start alles op, nadat alle andere scripts geladen zijn. */
 
-    const knop = document.createElement('button');
-    knop.id = 'bediening-knop';
-    knop.type = 'button';
-    knop.className = 'bediening-knop';
-    knop.setAttribute('aria-label', 'Open bediening');
-    knop.textContent = '⋯';
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    Prive.bouwDock();
+  } catch (e) { console.warn('Prive niet klaar voor bouwDock()', e); }
 
-    const paneel = document.createElement('div');
-    paneel.id = 'bediening-paneel';
-    paneel.className = 'bediening-paneel glas';
-    paneel.innerHTML = `
-      <div class="bediening-kop">Privé</div>
-      <button class="bediening-item" type="button" data-bediening="home">Home</button>
-      <button class="bediening-item" type="button" data-bediening="planner">Planner</button>
-      <button class="bediening-item" type="button" data-bediening="websites">Websites</button>
-      <button class="bediening-item" type="button" data-bediening="instellingen">Instellingen</button>
-      <button class="bediening-item" type="button" data-bediening="siri">Siri</button>
-    `;
+  try { Home.teken(); } catch (e) { console.warn('Home.teken faalde:', e); }
+  try { Achtergrond.werkBij(); } catch (e) { /* optioneel */ }
+  try { Eiland.rust(); Eiland.bewaak(); } catch (e) { /* optioneel */ }
+  try { Bediening.init(); } catch (e) { /* optioneel */ }
 
-    document.body.appendChild(knop);
-    document.body.appendChild(paneel);
+  try {
+    if (window.Opslag && Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll();
+  } catch (e) {}
 
-    knop.addEventListener('click', e => {
-      e.stopPropagation();
-      this.toggle();
-    });
+  const eilandEl = document.getElementById('eiland');
+  if (eilandEl) eilandEl.addEventListener('click', () => { try { Eiland.klik(); } catch (e) {} });
 
-    paneel.querySelectorAll('[data-bediening]').forEach(button => {
-      button.addEventListener('click', () => {
-        const app = button.dataset.bediening;
-        this.sluit();
-        if (app === 'siri' && window.Siri && typeof Siri.start === 'function') {
-          Siri.start();
-          return;
-        }
-        if (window.Prive && typeof Prive.start === 'function') {
-          Prive.start(app);
-        }
-      });
-    });
+  try { Prive.luister('taken', () => Home.taken()); } catch (e) {}
+  try { Prive.luister('websites', () => Home.websites()); } catch (e) {}
+  try { Prive.luister('weer', () => { Home.wedstrijd(); Achtergrond.werkBij(); }); } catch (e) {}
+  try { Prive.luister('instellingen', () => { Home.teken(); Achtergrond.werkBij(); }); } catch (e) {}
+  try { Prive.luister('auth', () => {
+    if (Opslag.lees('auth_spotify')) Eiland.startSpotifyPoll();
+    else Eiland.stopSpotifyPoll();
+  }); } catch (e) {}
 
-    document.addEventListener('click', e => {
-      if (!paneel.contains(e.target) && e.target !== knop) {
-        this.sluit();
-      }
-    });
-
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') this.sluit();
-    });
-  },
-
-  toggle() {
-    const paneel = document.getElementById('bediening-paneel');
-    if (!paneel) return;
-    paneel.classList.toggle('actief');
-  },
-
-  open() {
-    const paneel = document.getElementById('bediening-paneel');
-    if (!paneel) return;
-    paneel.classList.add('actief');
-  },
-
-  sluit() {
-    const paneel = document.getElementById('bediening-paneel');
-    if (!paneel) return;
-    paneel.classList.remove('actief');
+  const respectReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!respectReducedMotion) {
+    try { setInterval(() => Home.klok(), 10000); } catch (e) {}
+    try { setInterval(() => Home.wedstrijd(), 60000); } catch (e) {}
+    try { setInterval(() => { Home.weer(); Achtergrond.werkBij(); }, 15 * 60000); } catch (e) {}
   }
-};
 
-window.Bediening = Bediening;
+  try { setInterval(() => Prive.bouwDock(), 60 * 60000); } catch (e) {}
+
+  addEventListener('keydown', e => {
+    try {
+      if (e.key === 'Escape') {
+        if (document.getElementById('siri-laag') && document.getElementById('siri-laag').classList.contains('actief')) Siri.sluit();
+        else Prive.sluit();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); Siri.start(); }
+
+      const focus = document.activeElement;
+      if (focus && focus.classList && focus.classList.contains('dock-app')) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); focus.nextElementSibling?.focus(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); focus.previousElementSibling?.focus(); }
+      }
+    } catch (err) { /* swallow */ }
+  });
+
+  if (location.hash.length > 1) {
+    try { Prive.start(location.hash.slice(1)); } catch (e) { console.warn('Prive.start faalde', e); }
+  }
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+});
