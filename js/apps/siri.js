@@ -1,6 +1,4 @@
-/* BROWSER: een browser in je browser, met tabbladen en een adresbalk.
-   Deze versie blijft binnen de app en gebruikt leesmodus als een site niet in een iframe mag. */
-
+/* BROWSER: een browser in je browser, met tabbladen en een adresbalk. */
 const GEBLOKKEERD = ['google.', 'tiktok.com', 'youtube.com', 'instagram.com', 'facebook.com', 'x.com', 'twitter.com',
   'github.com', 'netflix.com', 'reddit.com', 'linkedin.com', 'snapchat.com', 'whatsapp.com', 'spotify.com', 'apple.com',
   'bol.com', 'magister.net', 'somtoday.nl', 'chatgpt.com', 'claude.ai', 'discord.com', 'twitch.tv'];
@@ -17,6 +15,7 @@ const FAVORIETEN = [
 const Browser = {
   tabs: [],
   actief: null,
+  body: null,
 
   nieuwTab(url) {
     const tab = { id: Math.random().toString(36).slice(2), url: '', geschiedenis: [], plek: -1 };
@@ -54,7 +53,7 @@ const Browser = {
       const u = new URL(url);
       const host = u.hostname;
       const rest = u.pathname + u.search + u.hash;
-      if (host === 'r.jina.ai') return url;
+      if (/^r\.jina\.ai$/i.test(host)) return url;
       return 'https://r.jina.ai/http://' + host + rest;
     } catch (e) {
       return url;
@@ -65,16 +64,16 @@ const Browser = {
     const r = this.maakUrl(tekst);
     if (!r) return;
     if (r.zoek) {
-      this.nieuwTab('https://www.google.com/search?q=' + encodeURIComponent(r.zoek));
+      const url = 'https://www.google.com/search?q=' + encodeURIComponent(r.zoek);
+      if (this.tabs.length) this.nieuwTab(url); else this.nieuwTab(url);
       return;
     }
 
-    const url = r.url;
     if (tab) {
       tab.geschiedenis = tab.geschiedenis.slice(0, tab.plek + 1);
-      tab.geschiedenis.push(url);
+      tab.geschiedenis.push(r.url);
       tab.plek = tab.geschiedenis.length - 1;
-      tab.url = url;
+      tab.url = r.url;
     }
     this.tekenAlles();
   },
@@ -104,8 +103,6 @@ const Browser = {
     this.tekenAlles();
   },
 
-  body: null,
-
   maak(body, opties) {
     this.body = body;
     body.classList.add('browser-body');
@@ -120,7 +117,10 @@ const Browser = {
       </form>
       <div class="pagina-vak"></div>`;
 
-    body.querySelector('form').addEventListener('submit', e => { e.preventDefault(); this.ga(e.target.adres.value); });
+    body.querySelector('form').addEventListener('submit', e => {
+      e.preventDefault();
+      this.ga(e.target.adres.value);
+    });
     body.querySelector('[data-a="terug"]').addEventListener('click', () => this.terug());
     body.querySelector('[data-a="vooruit"]').addEventListener('click', () => this.vooruit());
     body.querySelector('[data-a="herlaad"]').addEventListener('click', () => this.tekenAlles(true));
@@ -168,7 +168,7 @@ const Browser = {
               <span class="fav-letter" style="background:${f.kleur}">${f.naam[0]}</span>${veilig(f.naam)}
             </button>`).join('')}
           </div>
-          <p class="klein">Tip: plak een YouTube- of TikTok-videolink in de adresbalk; die wordt hier automatisch afgespeeld.</p>
+          <p class="klein">Tip: plak een YouTube- of TikTok-videolink in de adresbalk, die wordt hier direct geopend.</p>
         </div>`;
       vak.querySelectorAll('.favoriet').forEach(f => f.addEventListener('click', () => this.ga(f.dataset.url)));
       return;
@@ -182,7 +182,7 @@ const Browser = {
         <div class="geblokkeerd">
           <p class="groot-icoon">☰</p>
           <h3>${veilig(Websites.naamVan(echteUrl))} laat zich niet inbedden</h3>
-          <p>Open deze site in leesmodus binnen de app, of bekijk hem in een echt tabblad.</p>
+          <p>Open deze site in leesmodus of in een echt tabblad.</p>
           <button type="button" class="knop blauw" data-lees="${this.leesLink(echteUrl)}">Open in leesmodus</button>
         </div>`;
       vak.querySelector('[data-lees]').addEventListener('click', e => {
@@ -202,11 +202,11 @@ const Browser = {
       <iframe src="${veilig(tab.url)}" data-url="${veilig(tab.url)}" title="Website"
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
               allow="fullscreen; encrypted-media; autoplay"></iframe>
-      <p class="iframe-hint">Als de pagina wit blijft, dan blokkeert de site de embed. Gebruik de knop met ☰ voor leesmodus.</p>`;
+      <p class="iframe-hint">Als de pagina wit blijft, blokkeert de site de embed. Gebruik de knop met ☰ voor leesmodus.</p>`;
   }
 };
 
-prive.registreer({
+Prive.registreer({
   id: 'browser',
   naam: 'Browser',
   kleur: 'linear-gradient(160deg, #64D2FF, #0A84FF)',
